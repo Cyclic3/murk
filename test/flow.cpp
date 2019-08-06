@@ -26,9 +26,23 @@ void foo(int, int);
 
 TEST(flow, arithmetic) {
   auto flow =
-      (std::plus<int>() | 5) >> (std::minus<int>() | 2) >> (std::minus<int>() & 3);
+      (std::plus<int>() <5)
+   >> (std::minus<int>() >2)
+   >> (std::minus<int>() <3);
 
   int f = flow(3);
 
   ASSERT_EQ(f, -9);
 }
+
+TEST(flow, manyChained) {
+  auto func = [](size_t a, std::string b, float c) { return true; };
+
+  auto flow =
+      func <5 >5.;
+
+  bool f = flow("hi");
+
+  ASSERT_TRUE(f);
+}
+

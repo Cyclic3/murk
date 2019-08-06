@@ -2,17 +2,22 @@
 
 #include "murk/flow.hpp"
 
-#include <boost/beast.hpp>
+#include <boost/beast/core/flat_buffer.hpp>
+#include <boost/beast/http.hpp>
 
-#include <boost/asio.hpp>
+#include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/connect.hpp>
 #include <boost/asio/ssl.hpp>
 
 #include <boost/utility/string_view.hpp>
 
+#include <condition_variable>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <string>
+#include <set>
 #include <thread>
 #include <variant>
 #include <vector>
@@ -208,10 +213,22 @@ namespace murk::web {
       return navigate(resolve(u), u.res);
     }
 
+    struct cookie {
+      std::string key;
+      std::string value;
+      std::map<std::string, std::string> attr;
+      std::set<std::string> flags;
+
+      static cookie parse(std::string_view str);
+      std::string render_client() const;
+      std::string render_server() const;
+    };
+
     struct result {
       std::string body;
       address end_pos;
       boost::beast::http::status status;
+      std::map<std::string, cookie> cookies;
 
       inline operator std::string&() { return body; }
       inline operator const std::string&() const { return body; }
@@ -273,6 +290,7 @@ namespace murk::web {
 
     public:
       result request(http_req);
+      std::map<std::string, cookie> cookies;
 
     public:
       inline result get(std::string res) {

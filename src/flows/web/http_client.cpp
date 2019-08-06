@@ -1,12 +1,20 @@
 #include "murk/flows/web.hpp"
 
 #include <boost/algorithm/string/predicate.hpp>
-#include <boost/asio.hpp>
 
 namespace murk::web::http {
   result client::request(http_req req) {
     http_res res;
     boost::beast::flat_buffer buf;
+    if (!cookies.empty()) {
+      std::string set_cookie_str;
+      for (auto& i : cookies) {
+        set_cookie_str += i.second.render_client();
+        set_cookie_str += ';';
+      }
+      set_cookie_str.pop_back();
+      req.set(boost::beast::http::field::cookie, set_cookie_str);
+    }
 
     req.set(boost::beast::http::field::host, base.stub);
     req.set(boost::beast::http::field::connection, "keep-alive");
@@ -34,6 +42,15 @@ namespace murk::web::http {
     result ret;
     ret.status = res.result();
 
+    {
+      for (auto iter = res.find(boost::beast::http::field::set_cookie);
+           iter != res.end(); ++iter) {
+        auto v = iter->value();
+        auto c = cookie::parse({v.data(), v.size()});
+        ret.cookies[c.key] = c;
+      }
+    }
+
     // TODO: don't download pointless bodies
     // BUG: does not work cross-site
     switch (ret.status) {
@@ -48,8 +65,9 @@ namespace murk::web::http {
         if (loc.size() == 0)
           throw std::runtime_error("Empty redirect");
 
+          // Redirected out of http client site
         if (boost::contains(loc, "://"))
-          throw std::runtime_error("Redirected out of http client site");
+          return ret;
         else if (loc.front() == '/')
           return get(loc.to_string());
         else {

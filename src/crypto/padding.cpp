@@ -2,7 +2,11 @@
 
 #include <fmt/color.h>
 
-#include <boost/asio.hpp>
+#include <boost/asio/thread_pool.hpp>
+#include <boost/asio/post.hpp>
+
+#include <mutex>
+#include <condition_variable>
 
 namespace murk::crypto {
   /// TODO: Stop unnecessary alloc for plaintext

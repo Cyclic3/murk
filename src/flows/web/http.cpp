@@ -2,10 +2,9 @@
 
 #include <boost/beast.hpp>
 
-#include <boost/asio.hpp>
-#include <boost/asio/ssl.hpp>
-
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/split.hpp>
 
 #include <regex>
 #include <variant>
@@ -15,188 +14,65 @@ namespace murk::web::http {
   using tcp = boost::asio::ip::tcp;
   namespace http = boost::beast::http;
 
+  cookie cookie::parse(std::string_view str) {
+    cookie ret;
+
+    std::vector<std::string> toks;
+    boost::split(toks, str, boost::is_any_of(",; "));
+    if (toks.size() == 0)
+      throw std::invalid_argument("Empty cookie");
+
+    {
+      auto& i = toks.front();
+      auto split_pos = i.find('=');
+      if (split_pos == std::string::npos)
+        throw std::invalid_argument("No value in cookie");
+      ret.key = {i.begin(), i.begin() + split_pos};
+      ret.value = {i.begin() + split_pos + 1, i.end()};
+    }
+
+    for (auto iter = toks.begin() + 1; iter != toks.end(); ++iter) {
+      if (iter->size() == 0)
+        continue;
+      auto split_pos = iter->find('=');
+      if (split_pos == std::string::npos)
+        ret.flags.emplace(std::move(*iter));
+      else
+        ret.attr[{iter->begin(), iter->begin() + split_pos}] =
+          {iter->begin() + split_pos + 1, iter->end()};
+    }
+
+    return ret;
+  }
+  std::string cookie::render_client() const {
+    return fmt::format("{}={}", key, value);
+  }
+
+  std::string cookie::render_server() const {
+    std::string ret = render_client();
+    if (attr.empty()) {
+      return ret;
+    }
+
+    ret += ';';
+
+    ret += fmt::format("{}={};", key, value);
+    for (auto& i : attr) {
+        ret += fmt::format("{}={};", i.first, i.second);
+    }
+    for (auto& i : flags) {
+      ret += i;
+      ret += ';';
+    }
+
+    ret.pop_back();
+    return ret;
+  }
+
   std::string failure::get_string(int code) {
     auto v = http::obsolete_reason(static_cast<http::status>(code));
     return fmt::format("{}: {}", code, v.to_string());
   }
-
-  /*
-  class client::impl {
-  private:
-    using http_t = tcp::socket;
-    struct https_t {
-      ssl::context ssl_ctx{ssl::context::method::tlsv12};
-      ssl::stream<tcp::socket> stream;
-
-      https_t(tcp::socket&& sock) : stream{std::move(sock), ssl_ctx} {
-        ssl_ctx.set_default_verify_paths();
-        stream.handshake(ssl::stream_base::client);
-      }
-    };
-  private:
-    boost::asio::io_context io_ctx;
-    tcp::resolver resolver{io_ctx};
-    std::variant<std::monostate, http_t, https_t> underlying{};
-    tcp::resolver::results_type resolver_results{};
-    uri base;
-
-  private:
-    // returns true if https, false if http
-    bool resolve() {
-      if (!base.auth)
-        throw std::invalid_argument("web URI's must have an authority");
-
-      // Parts to extract
-      bool https;
-      std::string port;
-
-      // Well-formed checks
-      if (base.scheme == "http") {
-        https = false;
-        port = base.port().value_or("80");
-      }
-      else if (base.scheme == "https") {
-        https = true;
-        port = base.port().value_or("443");
-      }
-      else
-        throw std::invalid_argument("http connect with non-http scheme");
-
-      if (auto i = std::stoi(port); i < 0 || i > 65535)
-        throw std::invalid_argument("Port out of range");
-
-      resolver_results = resolver.resolve(base.host(), port);
-
-      return https;
-    }
-
-    void connect() {
-       return connect(std::holds_alternative<https_t>(underlying));
-    }
-
-    /// Leave me to be called when stuff broke
-    void connect(bool https) {
-      tcp::socket sock{io_ctx};
-
-      boost::asio::connect(sock, resolver_results.begin(), resolver_results.end());
-
-      if (https)
-        underlying.emplace<https_t>(std::move(sock));
-      else
-        underlying.emplace<http_t>(std::move(sock));
-    }
-
-  public:
-    http_result request(http::request<http::string_body> req) {
-      req.content_length(req.body().size());
-
-      std::visit([&](auto& i) {
-        using T = std::decay_t<decltype(i)>;
-        if constexpr (std::is_same_v<T, std::monostate>)
-          throw std::runtime_error("Tried to request through an uninitialised socket");
-        else if constexpr (std::is_same_v<T, https_t>) {
-          try { http::write(i.stream, req); }
-          catch(...) { connect(); http::write(i.stream, req); }
-        }
-        else {
-          try { http::write(i, req); }
-          catch(...) { connect(); http::write(i, req); }
-        }
-      }, underlying);
-
-      http::response<http::string_body> res;
-      boost::beast::flat_buffer buf;
-
-      std::visit([&](auto& i) {
-        using T = std::decay_t<decltype(i)>;
-        if constexpr (std::is_same_v<T, std::monostate>)
-          throw std::runtime_error("Tried to request through an uninitialised socket");
-        else if constexpr (std::is_same_v<T, https_t>) {
-          try { http::read(i.stream, buf, res); }
-          catch(...) { connect(); http::read(i.stream, buf, res); }
-        }
-        else {
-          try { http::read(i, buf, res); }
-          catch(...) { connect(); http::read(i, buf, res); }
-        }
-      }, underlying);
-
-      http_result ret;
-      ret.status = res.result();
-
-      // TODO: don't download pointless bodies
-      // BUG: does not work cross-site
-      switch (ret.status) {
-        case (http::status::found):
-        case (http::status::permanent_redirect):
-        case (http::status::temporary_redirect): {
-          auto loc_iter = res.find(http::field::location);
-          if (loc_iter == res.end())
-            throw std::runtime_error("Bad redirect");
-
-          return request(create_req(http::verb::get, uri{loc_iter->value().to_string()}));
-        } break;
-
-        default: {
-          ret.body = res.body();
-          ret.end_pos = uri::parse(req.target().to_string());
-          return ret;
-        } break;
-      }
-    }
-
-    http::request<http::string_body> create_req(http::verb verb, uri res,
-                                                std::string body = "") {
-      http::request<http::string_body> ret {
-        verb,
-        res.render(),
-        11,
-        std::move(body)
-      };
-
-      ret.set(http::field::connection, "keep-alive");
-      ret.set(http::field::host, res.auth->render_stub());
-
-      return ret;
-    }
-
-    http::request<http::string_body> create_req(http::verb verb, uri::resource res,
-                                                std::string body = "") {
-      uri full_uri = base;
-      res.path.add_base(base.path());
-      full_uri.res = std::move(res);
-
-      return create_req(verb, std::move(full_uri), std::move(body));
-    }
-
-  public:
-    impl(uri base_) : base{std::move(base_)}  {
-      connect(resolve());
-    }
-    impl(const impl& other) : io_ctx{}, resolver_results{other.resolver_results}, base{other.base}  {
-      connect();
-    }
-  };
-
-  client::~client() = default;
-  client::client(uri remote) : _impl{std::make_unique<impl>(std::move(remote))} {}
-  client::client(const client& other) : _impl{std::make_unique<impl>(*other._impl)} {}
-
-  http_result client::get(uri::resource u) {
-    return _impl->request(_impl->create_req(http::verb::get, std::move(u)));
-  }
-
-  http_result client::post_url_form(uri::resource u, form_t body) {
-    http::request<http::string_body> req =
-      _impl->create_req(http::verb::post, std::move(u), form_url_encode(body));
-    req.set(http::field::content_type, "application/x-www-form-urlencoded");
-    return _impl->request(std::move(req));
-  }
-
-//  http_result client::post(uri::resource u, std::string body) {
-//    return _impl->request({http::verb::post, _impl->render_location(std::move(u)), 11, body});
-//  }
-*/
 
   thread_local boost::asio::io_context resolver_io_ctx;
   thread_local tcp::resolver resolver{resolver_io_ctx};
@@ -253,6 +129,15 @@ namespace murk::web::http {
 
     result ret;
     ret.status = res.result();
+
+    {
+      for (auto iter = res.find(http::field::set_cookie);
+           iter != res.end(); ++iter) {
+        auto v = iter->value();
+        auto c = cookie::parse({v.data(), v.size()});
+        ret.cookies[c.key] = c;
+      }
+    }
 
     // TODO: don't download pointless bodies
     // BUG: does not work cross-site

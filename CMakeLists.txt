@@ -1,5 +1,12 @@
 cmake_minimum_required(VERSION 3.10)
 
+find_program(CCACHE_FOUND ccache)
+if(CCACHE_FOUND)
+  message("Using ccache")
+  set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
+  set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
+endif()
+
 set(CMAKE_CXX_STANDARD 17)
 
 project(murk)
@@ -55,5 +62,14 @@ target_link_libraries(tests murk GTest::GTest)
 gtest_discover_tests(tests)
 
 file(GLOB_RECURSE foo_source foo/*.cpp)
-add_executable(foo ${foo_source})
-target_link_libraries(foo murk)
+foreach(foo ${foo_source})
+  file(RELATIVE_PATH foo_rel ${CMAKE_SOURCE_DIR}/foo ${foo})
+  get_filename_component(foo_fname ${foo_rel} NAME_WE)
+  get_filename_component(foo_dir ${foo_rel} DIRECTORY)
+
+  set(foo_name ${foo_dir}_${foo_fname})
+
+  add_executable(${foo_name} ${foo})
+
+  target_link_libraries(${foo_name} murk)
+endforeach()

