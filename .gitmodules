@@ -1,0 +1,6 @@
+[submodule "gsl-lite"]
+	path = gsl-lite
+	url = git@github.com:martinmoene/gsl-lite.git
+[submodule "fmt"]
+	path = fmt
+	url = git@github.com:fmtlib/fmt.git
