@@ -2,6 +2,6 @@
 *.user*
 
 # Private CTFs
-foo/**
+foo/*/**
 # Except...
 !foo/dev/**
