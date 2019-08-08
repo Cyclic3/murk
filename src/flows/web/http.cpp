@@ -119,6 +119,8 @@ namespace murk::web::http {
     if (rem.https) {
       ssl::context ssl_ctx{ssl::context::method::tlsv12};
       ssl::stream<tcp::socket> stream{std::move(sock), ssl_ctx};
+      stream.handshake(ssl::stream_base::client);
+
       http::write(stream, req);
       http::read(stream, buf, res);
     }
@@ -156,7 +158,7 @@ namespace murk::web::http {
         if (boost::contains(loc, "://"))
           return get(navigate(loc.to_string()));
         else if (loc.front() == '/')
-          return get(navigate(rem, loc.to_string()));
+          return get(address::combine(rem, loc.to_string()));
         else {
           uri::resource base = req.target().to_string();
           if (!base.path.is_dir)
@@ -166,13 +168,13 @@ namespace murk::web::http {
                               extra.path.components.begin(), extra.path.components.end());
           base.query = std::move(extra.query);
           base.fragment = std::move(extra.fragment);
-          return get(navigate(rem, std::move(base)));
+          return get(address::combine(rem, std::move(base)));
         }
       } break;
 
       default: {
         ret.body = res.body();
-        ret.end_pos = navigate(rem, req.target().to_string());
+        ret.end_pos = address::combine(rem, req.target().to_string());
         return ret;
       } break;
     }

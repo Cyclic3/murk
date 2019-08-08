@@ -1,5 +1,7 @@
 #pragma once
 
+#include "murk/flow.hpp"
+
 #include <gsl/gsl-lite.hpp>
 
 #include <map>
@@ -38,6 +40,44 @@ namespace murk {
     for (auto i = 0; i < keys.size(); ++i)
       ret.emplace(keys[i], values[i]);
 
+    return ret;
+  }
+
+  template<typename From, typename To>
+  std::vector<To> cast_span(gsl::span<const From> in) {
+    std::vector<To> ret;
+    std::transform(std::begin(in), std::end(in), std::back_inserter(ret),
+                   [](auto i) { return static_cast<To>(i); });
+    return ret;
+  }
+
+  template<typename From, typename To = From>
+  std::vector<To> translate_span(flow_t<From, To> mapper, gsl::span<const From> in) {
+    std::vector<To> ret;
+    std::transform(std::begin(in), std::end(in), std::back_inserter(ret), mapper);
+    return ret;
+  }
+
+//  template<typename From, typename To>
+//  std::vector<To> cast_seq(From in) {
+//    std::vector<To> ret;
+//    std::transform(std::begin(in), std::end(in), std::back_inserter(ret),
+//                   [](auto i) { return static_cast<To>(i); });
+//    return ret;
+//  }
+
+//  template<typename From, typename To = From>
+//  std::vector<To> translate_seq(flow_t<typename std::iterator_traits<decltype(std::begin(in))>::value_type, To> mapper, From in) {
+//    std::vector<To> ret;
+//    std::transform(std::begin(in), std::end(in), std::back_inserter(ret), mapper);
+//    return ret;
+//  }
+
+  template<typename T>
+  inline std::map<T, size_t> count(gsl::span<const T> s) {
+    std::map<T, size_t> ret;
+    for (auto i : s)
+      ++ret[i];
     return ret;
   }
 }

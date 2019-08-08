@@ -1,5 +1,7 @@
 #pragma once
 
+#include <boost/algorithm/string/split.hpp>
+
 #include <regex>
 
 namespace murk {
@@ -21,5 +23,11 @@ namespace murk {
 
   std::string replace(std::regex regex, std::string replacement, std::string s) {
     return std::regex_replace(s, regex, replacement);
+  }
+
+  std::vector<std::string> split(std::string toks, std::string str) {
+    std::vector<std::string> ret;
+    boost::split(ret, str, [=](char c) { return toks.find(c) != std::string::npos; });
+    return ret;
   }
 }

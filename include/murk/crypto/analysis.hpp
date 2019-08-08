@@ -7,22 +7,32 @@
 #include <map>
 
 namespace murk::crypto {
-  extern std::array<char, 26> english_lcase;
-  extern std::array<char, 26> english_ucase;
-  extern std::array<char, 10> arabic_numerals;
-  extern std::map<char, float> english_dist;
+  using token_t = size_t;
+  using freq_t = double_t;
+  using dist_t = std::map<token_t, freq_t>;
 
-  template<typename T>
-  inline std::map<T, size_t> freq_analysis(gsl::span<const T> s) {
-    std::map<T, size_t> ret;
-    for (auto i : s)
-      ++ret[i];
+  extern const std::array<char, 26> english_lcase;
+  extern const std::array<char, 26> english_ucase;
+  extern const std::array<char, 10> arabic_numerals;
+
+  extern const std::map<char, freq_t> english_letter_dist;
+  extern const std::map<char, freq_t> twist_char_dist;
+
+  inline dist_t dist_conv(const std::map<char, freq_t>& a) {
+    dist_t ret;
+    for (auto& i : a)
+      ret[i.first] = i.second;
     return ret;
   }
+//  inline std::map<token_t, char> dist_to_text(const dist_t& a) {
+//    std::map<token_t, char> ret;
+//    for (auto& i : a)
+//      ret[i.first] = i.second;
+//    return ret;
+//  }
 
-  template<typename T>
-  inline std::map<T, float> normalise_freq(std::map<T, size_t> m) {
-    std::map<T, float> ret;
+  inline dist_t normalise_freq(const std::map<token_t, size_t>& m) {
+    dist_t ret;
     size_t count = 0;
 
     for (auto i : m)
@@ -34,45 +44,17 @@ namespace murk::crypto {
     return ret;
   }
 
-//  inline std::vector<std::pair<char, float>> sort_freqs(std::map<char, float> m) {
-//    std::vector<std::pair<char, float>> ret;
-//    ret.insert(ret.begin(), m.cbegin(), m.cend());
-//    std::sort(ret.begin(), ret.end(), [](auto a, auto b) { return a.second > b.second; });
-//    return ret;
-//  }
+  inline std::vector<std::pair<token_t, float>> sort_freq(const dist_t& m) {
+    std::vector<std::pair<token_t, float>> ret;
+    ret.insert(ret.begin(), m.cbegin(), m.cend());
+    std::sort(ret.begin(), ret.end(), [](auto a, auto b) { return a.second > b.second; });
+    return ret;
+  }
 
-  namespace distributions {
-    using token_t = size_t;
+  // The smaller this value, the closer the match
+  double score_dist_match(const dist_t& expected, const dist_t& measured);
 
-//    /// @returns A pair of (encoder, decoder)
-//    template<typename T>
-//    std::pair<std::vector<T>, std::map<T, size_t>> tokenise(gsl::span<const T> s) {
-//      std::pair<std::vector<T>, std::map<T, size_t>> ret;
-
-//      for (auto i : s) {
-//        if (ret.second.insert(i).second) {
-//          ret.first = i;
-//        }
-//      }
-//    }
-
-    inline std::map<token_t, float> calc_elem_distribution(gsl::span<const token_t> i) {
-      return normalise_freq(freq_analysis(i));
-    }
-
-//    std::vector<std::pair<std::pair<token_t, token_t>, float>> calc_pair_distribution(gsl::span<const token_t> toks) {
-//      std::vector<std::pair<std::pair<token_t, token_t>, float>> ret;
-
-//      if (toks.size() == 0)
-//        return ret;
-
-//      for (size_t i = 1; i < toks.size())
-//    }
-
-    std::map<token_t, std::map<token_t, float>> calc_next_distribution(gsl::span<const size_t> i);
-
-    /// @returns A map of (msg input, dist output)
-    std::map<size_t, size_t> match_distribution(std::map<size_t, float> dist, std::map<size_t, float> msg);
-  };
-
+  // The smaller this value, the more likely the
+  // measured distribution is a permutation of the expected one
+  double score_dist_compare(const dist_t& expected, const dist_t& measured);
 }

@@ -30,22 +30,6 @@ namespace murk {
     virtual ~Flow() = default;
   };
 
-  template<typename In, typename Out, typename InOut, typename OutIn = InOut>
-  class plumber : public Flow<In, Out> {
-  private:
-    flow_t<In, InOut> in;
-    flow_t<OutIn, Out> out;
-
-  public:
-    inline Out operator()(In i) override {
-      return out(in(i));
-    }
-
-  public:
-    inline plumber(flow_t<In, InOut> in_, flow_t<OutIn, Out> out_) :
-      in{std::move(in_)}, out{std::move(out_)} {}
-  };
-
   template<typename In>
   flow_t<In> in() {
     return [](In i) -> In { return i; };
@@ -86,9 +70,24 @@ namespace murk {
       return t;
   }
 
+  template<typename T>
+  T expect(const T& val, const T& t) {
+    if (val != t)
+      throw std::runtime_error("Unexpected");
+    else
+      return t;
+  }
+
   template<typename T, typename... Args>
   T construct(T, Args&&... args) {
     return {std::forward<Args&&>(args)...};
+  }
+
+  template<typename F>
+  void interactive(F f, std::string prompt_name = "") {
+    std::string line;
+    while ((std::cout << prompt_name << "> ", std::getline(std::cin, line)) && !line.empty())
+      std::cout << prompt_name << "< " << f(line) << std::endl;
   }
 
   struct link_t {};

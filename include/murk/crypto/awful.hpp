@@ -8,28 +8,28 @@
 #include <map>
 
 namespace murk::crypto {
-  template<typename T>
-  std::map<T, T> caeser_gen_encrypt_table(gsl::span<const T> alphabet, size_t key) {
-    auto target = rotate_right(key, alphabet);
-    return zip<T, T>(alphabet, target);
-  }
-  template<typename T>
-  std::map<T, T> caeser_gen_decrypt_table(gsl::span<const T> alphabet, size_t key) {
-    auto target = rotate_right(key, alphabet);
-    return zip<T, T>(target, alphabet);
-  }
+//  template<typename T>
+//  std::map<T, T> caeser_gen_encrypt_table(gsl::span<const T> alphabet, size_t key) {
+//    auto target = rotate_right(key, alphabet);
+//    return zip<T, T>(alphabet, target);
+//  }
+//  template<typename T>
+//  std::map<T, T> caeser_gen_decrypt_table(gsl::span<const T> alphabet, size_t key) {
+//    auto target = rotate_right(key, alphabet);
+//    return zip<T, T>(target, alphabet);
+//  }
 
-  template<typename T>
-  inline size_t caesar_known_sub_get_key(gsl::span<const T> alphabet,
-                                         T known_ctext, T known_ptext,
-                                         gsl::span<const T> msg) {
-    auto pos_iter = std::find(alphabet.begin(), alphabet.end(), known_ctext);
-    auto known_iter = std::find(alphabet.begin(), alphabet.end(), known_ptext);
+//  template<typename T>
+//  inline size_t caesar_known_sub_get_key(gsl::span<const T> alphabet,
+//                                         T known_ctext, T known_ptext,
+//                                         gsl::span<const T> msg) {
+//    auto pos_iter = std::find(alphabet.begin(), alphabet.end(), known_ctext);
+//    auto known_iter = std::find(alphabet.begin(), alphabet.end(), known_ptext);
 
-    ssize_t rot = known_iter - pos_iter;
+//    ssize_t rot = known_iter - pos_iter;
 
-    return rot >= 0 ? rot : alphabet.size() + rot;
-  }
+//    return rot >= 0 ? rot : alphabet.size() + rot;
+//  }
 
 //  template<typename T>
 //  inline size_t caesar_known_elem_get_key(gsl::span<const T> alphabet,
@@ -43,22 +43,22 @@ namespace murk::crypto {
 //    return rot >= 0 ? rot : alphabet.size() + rot;
 //  }
 
-  template<typename T>
-  inline size_t caesar_known_dist_get_key(gsl::span<const T> alphabet,
-                                          const std::map<T, float>& dist,
-                                          gsl::span<const T> msg) {
-    if (msg.size() == 0)
-      throw std::invalid_argument("Need at least one element for distribution analysis");
+//  template<typename T>
+//  inline size_t caesar_known_dist_get_key(gsl::span<const T> alphabet,
+//                                          const std::map<T, float>& dist,
+//                                          gsl::span<const T> msg) {
+//    if (msg.size() == 0)
+//      throw std::invalid_argument("Need at least one element for distribution analysis");
 
-    auto in_dist =
-           in<gsl::span<const T>>()
-        >> freq_analysis<T>
-        >> normalise_freq<T>
-        << msg;
-    // TODO: actual stats
+//    auto in_dist =
+//           in<gsl::span<const T>>()
+//        >> freq_analysis<T>
+//        >> normalise_freq<T>
+//        << msg;
+//    // TODO: actual stats
 
-    return caesar_known_sub_get_key(alphabet, *in_dist.begin(), *alphabet.begin(), msg);
-  }
+//    return caesar_known_sub_get_key(alphabet, *in_dist.begin(), *alphabet.begin(), msg);
+//  }
 
 //  template<typename In, typename Out>
 //  inline std::map<In, Out> crack_substitution(std::map<Out, float> out_dist, gsl::span<const In> in_msg) {

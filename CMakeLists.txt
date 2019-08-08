@@ -66,6 +66,7 @@ foreach(foo ${foo_source})
   file(RELATIVE_PATH foo_rel ${CMAKE_SOURCE_DIR}/foo ${foo})
   get_filename_component(foo_fname ${foo_rel} NAME_WE)
   get_filename_component(foo_dir ${foo_rel} DIRECTORY)
+  string(REPLACE "/" "_" foo_dir ${foo_dir})
 
   set(foo_name ${foo_dir}_${foo_fname})
 
