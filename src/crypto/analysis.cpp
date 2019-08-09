@@ -50,6 +50,7 @@ namespace murk::crypto {
   };
 
   const std::map<char, freq_t> twist_char_dist {
+    { '\n', 0.0205083545297384 },
     { ' ', 0.160632133483887 },
     { '!', 0.00158888415899128 },
     { '"', 9.88248648354784e-05 },
@@ -168,24 +169,33 @@ namespace murk::crypto {
     return pseudo_chi_squared;
   }
 
-//  std::map<size_t, size_t> match_distribution(std::map<size_t, float> dist, std::map<size_t, float> msg) {
-//    // TODO: actual stats, as opposed to bs matching
-//    // maybe even phrase based stuff. We'll see.
-//    //
-//    // TODO: generate candidates, in order of chance.
-//    // We actually kind of need this
-//    if (dist.size() != msg.size())
-//      throw std::invalid_argument("Cannot match distributions of different size");
 
-//    std::map<size_t, size_t> ret;
 
-//    // Sorry
-//    for (auto dist_iter = dist.begin(), msg_iter = msg.begin();
-//         dist_iter != dist.end();
-//         ++dist_iter, ++msg_iter) {
-//      ret[msg_iter->first] = dist_iter->second;
-//    }
+  size_t hamming_distance(murk::data_const_ref a, murk::data_const_ref b) {
+    size_t ret;
+    size_t i = 0;
 
-//    return ret;
-//  }
+    if (a.size() < b.size()) {
+      for (; i < a.size(); ++i) {
+        // Show which bits differ
+        uint8_t c = a[i] ^ b[i];
+        ret += count_set_bits(c);
+      }
+      for (; i < b.size(); ++i) {
+        ret += count_set_bits(a[i]);
+      }
+    }
+    else {
+      for (; i < b.size(); ++i) {
+        // Show which bits differ
+        uint8_t c = a[i] ^ b[i];
+        ret += count_set_bits(c);
+      }
+      for (; i < a.size(); ++i) {
+        ret += count_set_bits(a[i]);
+      }
+    }
+
+    return ret;
+  }
 }

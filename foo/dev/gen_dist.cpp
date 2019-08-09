@@ -17,7 +17,7 @@ int main() {
   auto m = f("/tmp/twist.txt");
   // Because these are more pain than they're worth
   m.erase('\r');
-  m.erase('\n');
+//  m.erase('\n');
 
   int precision = std::numeric_limits<murk::crypto::freq_t>::digits10;
 
@@ -26,8 +26,10 @@ int main() {
     std::string c;
     switch (i.first) {
       case ('\r'):
-      case ('\n'):
         continue;
+      case ('\n'): {
+        fmt::print("  {{ '\\n', {:.{}} }},\n", i.second, precision);
+      } break;
       case ('\''):
       case ('\\'): {
         fmt::print("  {{ '\\{}', {:.{}} }},\n", static_cast<char>(i.first), i.second, precision);

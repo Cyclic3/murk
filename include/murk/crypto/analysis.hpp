@@ -1,6 +1,7 @@
 #pragma once
 
 #include "murk/flow.hpp"
+#include "murk/data.hpp"
 
 #include <gsl/gsl-lite.hpp>
 
@@ -57,4 +58,18 @@ namespace murk::crypto {
   // The smaller this value, the more likely the
   // measured distribution is a permutation of the expected one
   double score_dist_compare(const dist_t& expected, const dist_t& measured);
+
+  template<typename T>
+  constexpr size_t count_set_bits(T t) {
+    using tt = std::numeric_limits<T>;
+    static_assert(tt::is_integer, "count_set_bits is ill defined on non-ints");
+    size_t bits = 0;
+    for (size_t j = 0; j < sizeof(t) * CHAR_BIT; ++j) {
+      bits += t & 1;
+      t >>= 1;
+    }
+    return bits;
+  }
+
+  size_t hamming_distance(murk::data_const_ref a, murk::data_const_ref b);
 }
