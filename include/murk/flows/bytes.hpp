@@ -12,13 +12,28 @@ namespace murk {
   inline std::string base64_encode(data_const_ref b) {
     std::string ret;
     ret.resize(boost::beast::detail::base64::encoded_size(b.size()));
+//    for (size_t n_read = 0; n_read < b.size)
     ret.resize(boost::beast::detail::base64::encode(ret.data(), b.data(), b.size()));
     return ret;
   }
   inline data base64_decode(std::string_view s) {
+    if (s.size() == 0)
+      return {};
+
     data ret;
     ret.resize(boost::beast::detail::base64::decoded_size(s.size()));
-    ret.resize(boost::beast::detail::base64::decode(ret.data(), s.data(), s.size()).first);
+    size_t n_read = 0;
+    size_t n_writ = 0;
+    do {
+      while(::isspace(s[n_read]) || s[n_read] == '=')
+        ++n_read;
+      auto r = boost::beast::detail::base64::decode(ret.data() + n_writ,
+                                                    s.data() + n_read, s.size() - n_read);
+      n_writ += r.first;
+      n_read += r.second;
+    }
+    while (n_read < s.size());
+    ret.resize(n_writ);
     return ret;
   }
 

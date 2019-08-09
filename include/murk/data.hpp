@@ -15,6 +15,11 @@ namespace murk {
     return {s.begin(), s.end()};
   }
 
+  inline data_const_ref get_data_const_ref(std::string_view s) {
+    data_const_ref ret{reinterpret_cast<const uint8_t*>(s.data()), s.size()};
+    return ret;
+  }
+
   template<typename T>
   T deserialise(data_const_ref b);
 

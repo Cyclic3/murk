@@ -11,6 +11,22 @@ namespace murk::crypto {
   using token_t = size_t;
   using freq_t = double_t;
   using dist_t = std::map<token_t, freq_t>;
+  using pair_dist_t = std::map<token_t, std::map<token_t, freq_t>>;
+
+  inline pair_dist_t calc_pair_dist(gsl::span<const token_t> in) {
+    if (in.size() < 2)
+      return {};
+
+    std::map<token_t, std::map<token_t, size_t>> count;
+    for (size_t i = 0; i < in.size() - 1; ++i) {
+      ++count[in[i]][in[i + 1]];
+    }
+    pair_dist_t ret;
+    for (auto& i : count)
+      for (auto& j : i.second)
+        ret[i.first][j.first] = static_cast<freq_t>(j.second) / static_cast<freq_t>(in.size() - 1);
+    return ret;
+  }
 
   extern const std::array<char, 26> english_lcase;
   extern const std::array<char, 26> english_ucase;
@@ -59,6 +75,8 @@ namespace murk::crypto {
   // measured distribution is a permutation of the expected one
   double score_dist_compare(const dist_t& expected, const dist_t& measured);
 
+  size_t hamming_distance(murk::data_const_ref a, murk::data_const_ref b);
+
   template<typename T>
   constexpr size_t count_set_bits(T t) {
     using tt = std::numeric_limits<T>;
@@ -70,6 +88,4 @@ namespace murk::crypto {
     }
     return bits;
   }
-
-  size_t hamming_distance(murk::data_const_ref a, murk::data_const_ref b);
 }

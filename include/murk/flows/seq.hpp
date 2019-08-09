@@ -46,8 +46,8 @@ namespace murk {
   template<typename From, typename To>
   std::vector<To> cast_span(gsl::span<const From> in) {
     std::vector<To> ret;
-    std::transform(std::begin(in), std::end(in), std::back_inserter(ret),
-                   [](auto i) { return static_cast<To>(i); });
+    std::transform(in.begin(), in.end(), std::back_inserter(ret),
+                   [](From i) { return static_cast<To>(i); });
     return ret;
   }
 

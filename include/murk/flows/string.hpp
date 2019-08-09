@@ -1,5 +1,7 @@
 #pragma once
 
+#include <fmt/format.h>
+
 #include <boost/algorithm/string/split.hpp>
 
 #include <regex>
@@ -29,5 +31,20 @@ namespace murk {
     std::vector<std::string> ret;
     boost::split(ret, str, [=](char c) { return toks.find(c) != std::string::npos; });
     return ret;
+  }
+
+  inline std::string escape_c_char(char c) {
+    switch (c) {
+      case ('\r'):
+        return "\\r";
+      case ('\n'):
+        return "\\n";
+      case ('\''):
+      case ('\"'):
+      case ('\\'):
+        return fmt::format("\\{}", c);
+      default:
+        return fmt::format("{}", c);
+    }
   }
 }
