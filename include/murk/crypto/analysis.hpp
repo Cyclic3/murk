@@ -14,6 +14,7 @@ namespace murk::crypto {
   using freq_t = double_t;
   using dist_t = std::map<token_t, freq_t>;
   using pair_dist_t = std::map<token_t, std::map<token_t, freq_t>>;
+  using token_seq_t = std::vector<token_t>;
 
   inline pair_dist_t calc_pair_dist(gsl::span<const token_t> in) {
     if (in.size() < 2)

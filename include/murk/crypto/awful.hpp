@@ -8,6 +8,34 @@
 #include <map>
 
 namespace murk::crypto {
+  namespace xor_single {
+    inline murk::data decrypt(uint8_t key, data_const_ref b) {
+      murk::data ret;
+      for (auto i : b)
+        ret.push_back(i & key);
+      return ret;
+    }
+
+    uint8_t crack(const dist_t& expected, murk::data_const_ref ctext);
+  }
+
+  namespace xor_vigenere {
+    inline murk::data decrypt(murk::data_const_ref key, data_const_ref b) {
+      murk::data ret(b.size());
+      for (size_t i = 0; i < b.size(); ++i)
+        ret[i] = b[i] ^ key[i % key.size()];
+
+      return ret;
+    }
+
+    size_t calc_key_length(const dist_t& expected, data_const_ref ctext, size_t min = 2, size_t max = 40);
+    /// @returns The key
+    murk::data crack_with_known_len(const dist_t& expected, data_const_ref ctext, size_t key_len);
+
+    inline murk::data crack(const dist_t& expected, data_const_ref ctext) {
+      return crack_with_known_len(expected, ctext, calc_key_length(expected, ctext));
+    }
+  }
 //  template<typename T>
 //  std::map<T, T> caeser_gen_encrypt_table(gsl::span<const T> alphabet, size_t key) {
 //    auto target = rotate_right(key, alphabet);

@@ -44,7 +44,10 @@ namespace murk {
       case ('\\'):
         return fmt::format("\\{}", c);
       default:
-        return fmt::format("{}", c);
+        if (::isprint(c))
+          return fmt::format("{}", c);
+        else
+          return fmt::format("\\x{:x}", static_cast<unsigned char>(c));
     }
   }
 }
