@@ -7,6 +7,8 @@
 
 #include <map>
 
+#include <limits.h>
+
 namespace murk::crypto {
   using token_t = size_t;
   using freq_t = double_t;
