@@ -25,17 +25,17 @@ namespace murk::pwn {
     ~instructions();
   };
 
-  class disasm {
+  class disassembler {
   private:
     ::csh handle;
 
   public:
-    instructions disassemble(murk::data_const_ref code,
-                             uint64_t addr = 0,
-                             size_t max_count = 0) const;
+    instructions disasm(murk::data_const_ref code,
+                        uint64_t addr = 0,
+                        size_t max_count = 0) const;
 
   public:
-    disasm(::cs_arch arch, ::cs_mode mode);
-    ~disasm();
+    disassembler(::cs_arch arch, ::cs_mode mode);
+    ~disassembler();
   };
 }
