@@ -1,0 +1,13 @@
+[submodule "fmt"]
+	path = fmt
+	url = git@github.com:fmtlib/fmt.git
+[submodule "cppthings"]
+	path = cppthings
+<<<<<<< HEAD
+	url = https://github.com/Cyclic3/cppthings
+[submodule "span-lite"]
+	path = span-lite
+	url = https://github.com/martinmoene/span-lite.git
+=======
+	url = https://github.com/Cyclic3/cppthings.git
+>>>>>>> Started work on binary dissection

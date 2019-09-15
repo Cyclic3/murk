@@ -45,6 +45,17 @@ target_link_libraries(murk
   CppThings::cppthings
   Capstone::capstone
   PRIVATE
+  Z3::z3
+PRIVATE # Libraries only needed to build this library
+)
+
+target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
+
+include(GNUInstallDirs)
+
+target_include_directories(${PROJECT_NAME} PUBLIC
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
 target_include_directories(murk
