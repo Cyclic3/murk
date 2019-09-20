@@ -1,19 +1,37 @@
 #include "murk/flows/web.hpp"
+#include "murk/flows/string.hpp"
 
 #include <boost/beast.hpp>
 
 #include <boost/algorithm/string.hpp>
 
 namespace murk::web {
-  std::string multipart_formdata_encode(form_t form);
-  form_t multipart_formdata_decode(std::string_view form);
+  std::string multipart_formdata_encode(const multiform_t& form, std::string_view boundary) {
+    std::string ret;
 
-  std::string form_url_encode(form_t form) {
-    // BUG: does not escape
+    for (auto& i : form.base) {
+      ret.append(fmt::format("--{}\r\nContent-Disposition: form-data; name=\"{}\"\r\n\r\n",
+                             boundary, escape_double_quotes(i.first)));
+      ret.append(i.second);
+      ret.append("\r\n");
+    }
+    for (auto& i : form.files) {
+      ret.append(fmt::format("--{}\r\nContent-Disposition: form-data; name=\"{}\"; filename=\"{}\"\r\nContent-Type: {}\r\n\r\n",
+                             boundary, escape_double_quotes(i.first), escape_double_quotes(i.second.filename), escape_double_quotes(i.second.mime)));
+      ret.append(reinterpret_cast<const char*>(i.second.dat.data()), i.second.dat.size());
+      ret.append("\r\n");
+    }
+//    ret.erase(ret.end() - 2, ret.end());
+    ret.append(fmt::format("--{}--\r\n", boundary));
+    return ret;
+  }
+  multiform_t multipart_formdata_decode(std::string_view form, std::string_view boundary);
+
+  std::string form_url_encode(const form_t& form) {
     std::string ret;
 
     for (auto& i : form) {
-      ret.append(fmt::format("{}={}&", i.first, i.second));
+      ret.append(fmt::format("{}={}&", uri::encode(i.first), uri::encode(i.second)));
     }
     ret.pop_back();
 

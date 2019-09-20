@@ -51,10 +51,14 @@ namespace murk::web::http {
       }
     }
 
+    /// XXX: FIXME: NOOOOO
+    cookies.merge(ret.cookies);
+
     // TODO: don't download pointless bodies
     // BUG: does not work cross-site
     switch (ret.status) {
       case (boost::beast::http::status::found):
+      case (boost::beast::http::status::moved_permanently):
       case (boost::beast::http::status::permanent_redirect):
       case (boost::beast::http::status::temporary_redirect): {
         auto loc_iter = res.find(boost::beast::http::field::location);
@@ -66,8 +70,13 @@ namespace murk::web::http {
           throw std::runtime_error("Empty redirect");
 
           // Redirected out of http client site
-        if (boost::contains(loc, "://"))
-          return ret;
+        if (boost::contains(loc, "://")) {
+          auto new_uri = navigate(loc.to_string());
+          if (new_uri.base == base)
+            return get(new_uri.res);
+          else
+            return http::get(navigate(loc.to_string()));
+        }
         else if (loc.front() == '/')
           return get(loc.to_string());
         else {
@@ -90,8 +99,6 @@ namespace murk::web::http {
         return ret;
       } break;
     }
-
-    return ret;
   }
 
   client::client(remote base_) : base{std::move(base_)} {

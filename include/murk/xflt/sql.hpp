@@ -80,6 +80,16 @@ namespace murk::xflt::sql {
     }
   }
 
+  flow_t<std::string_view, std::vector<std::string>> limit_iter(flow_t<std::string_view, std::optional<std::string>> f) {
+    return [=](std::string_view str) -> std::vector<std::string> {
+      std::vector<std::string> ret;
+      std::optional<std::string> res;
+      while ((res = f(fmt::format("{} LIMIT 1,1"))))
+        ret.push_back(*res);
+      return ret;
+    };
+  }
+
   std::string get_pos_info_v = "SELECT a()";
 
   std::string force_select_v(std::vector<std::string> params) {

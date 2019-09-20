@@ -17,6 +17,7 @@ find_package(Boost REQUIRED system)
 find_package(OpenSSL REQUIRED)
 find_package(Threads REQUIRED)
 find_package(TBB REQUIRED)
+find_package(Botan REQUIRED)
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/gsl-lite)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/fmt)
@@ -34,6 +35,7 @@ target_link_libraries(murk
   Threads::Threads
   fmt::fmt-header-only
   TBB::tbb
+  Botan::botan
   PRIVATE
 )
 

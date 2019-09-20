@@ -1,6 +1,7 @@
 #pragma once
 
 #include "murk/flow.hpp"
+#include "murk/data.hpp"
 
 #include <boost/beast/core/flat_buffer.hpp>
 #include <boost/beast/http.hpp>
@@ -23,6 +24,7 @@
 #include <vector>
 
 namespace murk::web {
+
   // BUG: does not escape urlencoded stuff
 
   // F*** you, rfc3986
@@ -30,6 +32,9 @@ namespace murk::web {
   /// Like all the parsers, this parses weakly,
   /// and renders strong
   struct uri {
+    static std::string encode(std::string_view str);
+    static std::string decode(std::string_view str);
+
     struct authority {
       std::optional<std::string> userinfo;
       std::string host;
@@ -149,10 +154,27 @@ namespace murk::web {
   };
 
   using form_t = std::multimap<std::string, std::string>;
+  struct file_form_elem {
+    std::string filename;
+    std::string mime = "application/octet-stream";
+    data dat;
+  };
 
-  std::string multipart_formdata_encode(form_t form);
-  form_t multipart_formdata_decode(std::string_view form);
-  std::string form_url_encode(form_t form);
+  using file_form_t = std::multimap<std::string, file_form_elem>;
+
+  struct multiform_t {
+    form_t base;
+    file_form_t files;
+
+    multiform_t() = default;
+    inline multiform_t(const form_t& base_) : base{base_} {}
+    inline multiform_t(form_t&& base_) : base{std::move(base_)} {}
+    inline multiform_t(form_t&& base_, file_form_t&& files_) : base{std::move(base_)}, files{std::move(files_)} {}
+  };
+
+  std::string multipart_formdata_encode(const multiform_t& form, std::string_view boundary);
+  multiform_t multipart_formdata_decode(std::string_view form, std::string_view boundary);
+  std::string form_url_encode(const form_t& form);
   form_t form_url_decode(std::string_view form);
 
   namespace http {
@@ -182,6 +204,25 @@ namespace murk::web {
       bool https;
       boost::asio::ip::tcp::resolver::results_type eps;
       std::string stub;
+
+      inline bool operator==(const remote& other) const {
+        if (https != other.https)
+          return false;
+        if (stub == other.stub)
+          return true;
+
+        // No comparison, so we have good ol' O(n^2)
+        for (auto& i : eps)
+          for (auto& j : other.eps)
+            if (i.endpoint() == j.endpoint())
+              return true;
+
+        return false;
+      }
+
+      inline operator std::string() const {
+        return fmt::format("{}://{}", https ? "https" : "http", stub);
+      }
     };
 
     struct address {
@@ -202,6 +243,12 @@ namespace murk::web {
         address ret;
         ret.base = rem;
         ret.res = res.render();
+        return ret;
+      }
+
+      inline operator std::string() const {
+        std::string ret = base;
+        ret += res;
         return ret;
       }
     };
@@ -255,6 +302,17 @@ namespace murk::web {
         addr.res, 11, form_url_encode(form)
       };
       req.set(boost::beast::http::field::content_type, "application/x-www-form-urlencoded");
+      req.set(boost::beast::http::field::content_length, req.body().size());
+      return request(addr.base, std::move(req));
+    }
+
+    inline result post_multipart(const address& addr, multiform_t form, std::string_view boundary) {
+      boost::beast::http::request<boost::beast::http::string_body> req {
+        boost::beast::http::verb::post,
+        addr.res, 11, multipart_formdata_encode(form, boundary)
+      };
+      req.set(boost::beast::http::field::content_type,
+              fmt::format("multipart/form-data; boundary={}", boundary));
       req.set(boost::beast::http::field::content_length, req.body().size());
       return request(addr.base, std::move(req));
     }
@@ -315,6 +373,17 @@ namespace murk::web {
         return request(std::move(req));
       }
 
+      inline result post_multipart(std::string res, multiform_t form, std::string_view boundary) {
+        boost::beast::http::request<boost::beast::http::string_body> req {
+          boost::beast::http::verb::post,
+          res, 11, multipart_formdata_encode(form, boundary)
+        };
+        req.set(boost::beast::http::field::content_type,
+                fmt::format("multipart/form-data; boundary={}", boundary));
+        req.set(boost::beast::http::field::content_length, req.body().size());
+        return request(std::move(req));
+      }
+
     public:
       client();
       ~client() = default;
@@ -364,6 +433,17 @@ namespace murk::web {
           res, 11, form_url_encode(form)
         };
         req.set(boost::beast::http::field::content_type, "application/x-www-form-urlencoded");
+        req.set(boost::beast::http::field::content_length, req.body().size());
+        return request(std::move(req));
+      }
+
+      inline result post_multipart(std::string res, multiform_t form, std::string_view boundary) {
+        boost::beast::http::request<boost::beast::http::string_body> req {
+          boost::beast::http::verb::post,
+          res, 11, multipart_formdata_encode(form, boundary)
+        };
+        req.set(boost::beast::http::field::content_type,
+                fmt::format("multipart/form-data; boundary={}", boundary));
         req.set(boost::beast::http::field::content_length, req.body().size());
         return request(std::move(req));
       }

@@ -7,7 +7,7 @@
 #include <regex>
 
 namespace murk {
-  std::string extract(std::regex regex, std::string s) {
+  inline std::string extract(std::regex regex, std::string s) {
     std::smatch matches;
     if (!std::regex_search(s, matches, regex))
       throw std::runtime_error("Could not match regex");
@@ -19,17 +19,39 @@ namespace murk {
       throw std::runtime_error("Invalid extraction regex. Use at most 1 capture group.");
   }
 
-  bool contains(std::regex regex, std::string s) {
+  inline bool contains(std::regex regex, std::string s) {
     return std::regex_search(s, regex);
   }
 
-  std::string replace(std::regex regex, std::string replacement, std::string s) {
+  inline std::string replace(std::regex regex, std::string replacement, std::string s) {
     return std::regex_replace(s, regex, replacement);
   }
 
-  std::vector<std::string> split(std::string toks, std::string str) {
+  inline std::vector<std::string> split(std::string toks, std::string str) {
     std::vector<std::string> ret;
     boost::split(ret, str, [=](char c) { return toks.find(c) != std::string::npos; });
+    return ret;
+  }
+
+  inline std::string escape_single_quotes(std::string_view s) {
+    std::string ret;
+    for (auto i : s) {
+      if (i == '\'')
+        ret.append("'");
+      else
+        ret.push_back(i);
+    }
+    return ret;
+  }
+
+  inline std::string escape_double_quotes(std::string_view s) {
+    std::string ret;
+    for (auto i : s) {
+      if (i == '"')
+        ret.append("\\\"");
+      else
+        ret.push_back(i);
+    }
     return ret;
   }
 
@@ -49,5 +71,12 @@ namespace murk {
         else
           return fmt::format("\\x{:x}", static_cast<unsigned char>(c));
     }
+  }
+
+  inline std::string escape_c(std::string_view s) {
+    std::string ret;
+    for (auto i : s)
+      ret.append(escape_c_char(i));
+    return ret;
   }
 }

@@ -40,18 +40,19 @@ namespace murk {
     return static_cast<To>(f);
   }
 
-  template<typename T>
-  T log(std::string format, T t) {
-    std::cout << fmt::format(format, t) << std::endl;
-    return t;
+  template<typename First, typename... Args>
+  First log(std::string format, First first, Args... args) {
+    fmt::print(format, first, args...);
+    fmt::print("\n");
+    return first;
   }
 
-  template<typename T>
-  T alert(std::string format, T t) {
-    fmt::print(fmt::bg(fmt::color::red), format, t);
+  template<typename First, typename... Args>
+  First alert(std::string format, First first, Args... args) {
+    fmt::print(fmt::bg(fmt::color::red), format, first, args...);
     fmt::print("\n");
     fflush(stdout);
-    return t;
+    return first;
   }
 
   template<typename T>
@@ -126,8 +127,8 @@ namespace murk {
 }
 
 #define MURK_INVOKE(OBJ, FUNCTION) \
-  [&](std::tuple_element_t<1, boost::callable_traits::args_t<decltype(&decltype(OBJ)::FUNCTION)>> x) -> \
-  boost::callable_traits::return_type_t<decltype(&decltype(OBJ)::FUNCTION)> { return OBJ.FUNCTION(x); }
+  [&](auto&&... args) -> \
+  boost::callable_traits::return_type_t<decltype(&decltype(OBJ)::FUNCTION)> { return OBJ.FUNCTION(args...); }
 #define MURK_INVOKE_COPY(OBJ, FUNCTION) \
   [=](std::tuple_element_t<1, boost::callable_traits::args_t<decltype(&decltype(OBJ)::FUNCTION)>> x) -> \
   boost::callable_traits::return_type_t<decltype(&decltype(OBJ)::FUNCTION)> { return OBJ.FUNCTION(x); }

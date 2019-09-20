@@ -169,4 +169,16 @@ namespace murk::web {
       components.insert(components.begin(), base.components.begin(), base.components.end() - 1);
     }
   }
+
+  std::string uri::encode(std::string_view str) {
+    std::string ret;
+    for (auto i : str) {
+      // TODO: Remove unnecessary %-encoding
+      if (::isalnum(i))
+        ret.push_back(i);
+      else
+        ret.append(fmt::format("%{:02X}", (unsigned char)i));
+    }
+    return ret;
+  }
 }
