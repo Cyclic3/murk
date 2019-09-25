@@ -2,8 +2,6 @@
 
 #include <fmt/format.h>
 
-#include <boost/algorithm/string/split.hpp>
-
 #include <regex>
 
 namespace murk {
@@ -27,11 +25,7 @@ namespace murk {
     return std::regex_replace(s, regex, replacement);
   }
 
-  inline std::vector<std::string> split(std::string toks, std::string str) {
-    std::vector<std::string> ret;
-    boost::split(ret, str, [=](char c) { return toks.find(c) != std::string::npos; });
-    return ret;
-  }
+  inline std::vector<std::string> split(std::string toks, std::string str);
 
   inline std::string escape_single_quotes(std::string_view s) {
     std::string ret;

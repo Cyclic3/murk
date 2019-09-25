@@ -1,8 +1,46 @@
-#include "murk/flows/web.hpp"
+#include "murk/web/http.hpp"
+#include "murk/web/http_eps.hpp"
+
+#include <boost/beast.hpp>
+
+#include <boost/asio/connect.hpp>
+#include <boost/asio/ssl.hpp>
+#include <boost/asio/ip/tcp.hpp>
 
 #include <boost/algorithm/string/predicate.hpp>
 
 namespace murk::web::http {
+  struct client::http_t {
+    boost::asio::io_context io_ctx;
+    boost::asio::ip::tcp::socket sock{io_ctx};
+
+    void connect(const remote& rem) {
+      boost::asio::connect(sock, rem.eps->val.begin(), rem.eps->val.end());
+    }
+
+    inline http_t(const remote& rem) {
+      connect(rem);
+    }
+  };
+
+  struct client::https_t {
+    boost::asio::io_context io_ctx;
+    boost::asio::ssl::context ssl_ctx{boost::asio::ssl::context::method::tlsv12};
+    boost::asio::ssl::stream<boost::asio::ip::tcp::socket> sock;
+
+    void connect(const remote& rem) {
+      boost::asio::connect(sock.next_layer(), rem.eps->val.begin(), rem.eps->val.end());
+      sock.handshake(boost::asio::ssl::stream_base::client);
+    }
+
+    https_t(const remote& rem);
+  };
+
+  client::https_t::https_t(const remote& rem) : sock{io_ctx, ssl_ctx} {
+    ssl_ctx.set_default_verify_paths();
+    connect(rem);
+  }
+
   result client::request(http_req req) {
     http_res res;
     boost::beast::flat_buffer buf;
@@ -24,14 +62,14 @@ namespace murk::web::http {
         throw std::invalid_argument("Attempting to request from an uninitialised socket");
       else {
         try {
-          boost::beast::http::write(s.sock, req);
-          boost::beast::http::read(s.sock, buf, res);
+          boost::beast::http::write(s->sock, req);
+          boost::beast::http::read(s->sock, buf, res);
         }
         catch(const boost::system::system_error& e) {
           if (e.code() == boost::beast::http::error::end_of_stream) {
-            s.connect(base);
-            boost::beast::http::write(s.sock, req);
-            boost::beast::http::read(s.sock, buf, res);
+            s->connect(base);
+            boost::beast::http::write(s->sock, req);
+            boost::beast::http::read(s->sock, buf, res);
           }
           else
             throw;
@@ -101,10 +139,14 @@ namespace murk::web::http {
     }
   }
 
+  client::client() = default;
+
   client::client(remote base_) : base{std::move(base_)} {
     if (base.https)
-      val.emplace<https_t>(base);
+      val.emplace<std::unique_ptr<https_t>>(std::make_unique<https_t>(base));
     else
-      val.emplace<http_t>(base);
+      val.emplace<std::unique_ptr<http_t>>(std::make_unique<http_t>(base));
   }
+
+  client::~client() = default;
 }

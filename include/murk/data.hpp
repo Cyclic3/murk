@@ -1,6 +1,6 @@
 #pragma once
 
-#include <gsl/gsl-lite.hpp>
+#include "murk/span.hpp"
 
 #include <boost/endian/conversion.hpp>
 
@@ -10,8 +10,8 @@
 
 namespace murk {
   using data = std::vector<uint8_t>;
-  using data_ref = gsl::span<uint8_t>;
-  using data_const_ref = gsl::span<const uint8_t>;
+  using data_ref = nonstd::span<uint8_t>;
+  using data_const_ref = nonstd::span<const uint8_t>;
 
   inline data serialise(std::string_view s) {
     return {s.begin(), s.end()};
@@ -47,7 +47,7 @@ namespace murk {
 
   /// XXX: does not check size. Will check when we get std::span
   template<typename Int>
-  inline Int from_big_endian(gsl::span<const uint8_t> b) {
+  inline Int from_big_endian(nonstd::span<const uint8_t> b) {
     return boost::endian::big_to_native(*reinterpret_cast<Int*>(b.data()));
   }
 }

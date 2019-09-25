@@ -1,5 +1,7 @@
 #include "murk/crypto/padding.hpp"
 
+#include <cppthings/defer.hpp>
+
 #include <fmt/color.h>
 
 #include <boost/asio/thread_pool.hpp>
@@ -51,7 +53,7 @@ namespace murk::crypto {
       std::atomic<bool> found = false;
       uint_fast16_t done = 0;
       std::atomic<uint8_t> value;
-      auto _ = gsl::finally([&] {
+      auto _ = cppthings::defer([&] {
 //        pool.join();
         std::unique_lock lock{done_mutex};
         done_condvar.wait(lock, [&] { return done == 256; });
@@ -63,7 +65,7 @@ namespace murk::crypto {
         boost::asio::post(pool, [scapegoat, pos, i, padding_value,
                                  &oracle, &value,
                                  &found, &done_mutex, &done_condvar, &done] () mutable {
-          auto _ = gsl::finally([&]() {
+          auto _ = cppthings::defer([&]() {
             std::unique_lock lock{done_mutex};
             if (++done == 256) {
               done_condvar.notify_all();

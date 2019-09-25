@@ -1,4 +1,7 @@
-#include "murk/flows/web.hpp"
+#include "murk/web/form.hpp"
+
+#include "murk/web/uri.hpp"
+
 #include "murk/flows/string.hpp"
 
 #include <boost/beast.hpp>

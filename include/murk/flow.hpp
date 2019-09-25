@@ -3,8 +3,6 @@
 #include <fmt/format.h>
 #include <fmt/color.h>
 
-#include <boost/callable_traits.hpp>
-
 #include <functional>
 #include <tuple>
 #include <iostream>
@@ -41,14 +39,15 @@ namespace murk {
   }
 
   template<typename First, typename... Args>
-  First log(std::string format, First first, Args... args) {
+  First log(std::string format, First&& first, Args&&... args) {
     fmt::print(format, first, args...);
     fmt::print("\n");
+    fflush(stdout);
     return first;
   }
 
   template<typename First, typename... Args>
-  First alert(std::string format, First first, Args... args) {
+  First alert(std::string format, First&& first, Args&&... args) {
     fmt::print(fmt::bg(fmt::color::red), format, first, args...);
     fmt::print("\n");
     fflush(stdout);
@@ -87,7 +86,7 @@ namespace murk {
   template<typename F>
   void interactive(F f, std::string prompt_name = "") {
     std::string line;
-    while ((std::cout << prompt_name << "> ", std::getline(std::cin, line)) && !line.empty())
+    while (((void)(std::cout << prompt_name << "> "), std::getline(std::cin, line)) && !line.empty())
       std::cout << prompt_name << "< " << f(line) << std::endl;
   }
 
@@ -127,8 +126,6 @@ namespace murk {
 }
 
 #define MURK_INVOKE(OBJ, FUNCTION) \
-  [&](auto&&... args) -> \
-  boost::callable_traits::return_type_t<decltype(&decltype(OBJ)::FUNCTION)> { return OBJ.FUNCTION(args...); }
+  [&](auto&&... args) { return OBJ.FUNCTION(args...); }
 #define MURK_INVOKE_COPY(OBJ, FUNCTION) \
-  [=](std::tuple_element_t<1, boost::callable_traits::args_t<decltype(&decltype(OBJ)::FUNCTION)>> x) -> \
-  boost::callable_traits::return_type_t<decltype(&decltype(OBJ)::FUNCTION)> { return OBJ.FUNCTION(x); }
+  [=](auto&&... args) { return OBJ.FUNCTION(args...); }

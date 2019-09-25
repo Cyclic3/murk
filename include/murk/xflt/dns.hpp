@@ -4,7 +4,7 @@
 
 #include <boost/signals2.hpp>
 
-#include <gsl/gsl-lite.hpp>
+#include <nonstd/span.hpp>
 
 namespace murk::xflt {
   class dns {
@@ -22,7 +22,7 @@ namespace murk::xflt {
   private:
     void start_receive();
   public:
-    boost::signals2::signal<void(gsl::span<const std::string>)> recv;
+    boost::signals2::signal<void(nonstd::span<const std::string>)> recv;
 
   public:
     dns(boost::asio::io_context* io_ctx, uint16_t port = 53);

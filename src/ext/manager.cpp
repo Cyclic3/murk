@@ -6,7 +6,9 @@ namespace murk::ext {
   manager mgr;
 
   manager::manager() {
-    base_dir = file::home / ".murk" / "ext";
+    base_dir = file::home() / ".murk";
+    std::filesystem::create_directory(base_dir);
+    base_dir /= "ext";
     std::filesystem::create_directory(base_dir);
     std::filesystem::create_directory(base_dir/".dls");
   }

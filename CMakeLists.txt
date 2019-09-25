@@ -7,11 +7,13 @@ if(CCACHE_FOUND)
   set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
 endif()
 
-set(CMAKE_CXX_STANDARD 17)
+
+set(CMAKE_CXX_STANDARD 20)
 
 project(murk)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+include(cotire)
 
 find_package(Boost REQUIRED system)
 find_package(OpenSSL REQUIRED)
@@ -19,23 +21,26 @@ find_package(Threads REQUIRED)
 find_package(TBB REQUIRED)
 find_package(Botan REQUIRED)
 
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/gsl-lite)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/cppthings)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/span-lite)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/fmt)
 
 file(GLOB_RECURSE murk_source ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
 
 add_library(murk ${murk_source})
+cotire(murk)
 
 target_link_libraries(murk
   PUBLIC
   Boost::boost
   Boost::system
   OpenSSL::SSL
-  gsl::gsl-lite
+  nonstd::span-lite
   Threads::Threads
   fmt::fmt-header-only
   TBB::tbb
   Botan::botan
+  CppThings::cppthings
   PRIVATE
 )
 

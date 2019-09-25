@@ -1,6 +1,10 @@
-#include "murk/flows/web.hpp"
+#include "murk/web/http.hpp"
+#include "murk/web/http_eps.hpp"
 
 #include <boost/beast.hpp>
+
+#include <boost/asio/connect.hpp>
+#include <boost/asio/ssl.hpp>
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/classification.hpp>
@@ -74,8 +78,23 @@ namespace murk::web::http {
     return fmt::format("{}: {}", code, v.to_string());
   }
 
-  thread_local boost::asio::io_context resolver_io_ctx;
-  thread_local tcp::resolver resolver{resolver_io_ctx};
+  bool remote::operator==(const remote& other) const {
+    if (https != other.https)
+      return false;
+    if (stub == other.stub)
+      return true;
+
+    // No comparison, so we have good ol' O(n^2)
+    for (auto& i : eps->val)
+      for (auto& j : other.eps->val)
+        if (i.endpoint() == j.endpoint())
+          return true;
+
+    return false;
+  }
+
+  static thread_local boost::asio::io_context resolver_io_ctx;
+  static thread_local tcp::resolver resolver{resolver_io_ctx};
 
   remote resolve(const uri& u) {
     remote ret;
@@ -100,7 +119,8 @@ namespace murk::web::http {
     if (auto i = std::stoi(port); i < 0 || i > 65535)
       throw std::invalid_argument("Port out of range");
 
-    ret.eps = resolver.resolve(u.auth->host, port);
+    ret.eps = std::make_shared<remote::eps_t>();
+    ret.eps->val = resolver.resolve(u.auth->host, port);
 
     ret.stub = u.auth->render_stub();
 
@@ -112,7 +132,7 @@ namespace murk::web::http {
 
     boost::asio::io_context io_ctx;
     tcp::socket sock{io_ctx};
-    boost::asio::connect(sock, rem.eps.begin(), rem.eps.end());
+    boost::asio::connect(sock, rem.eps->val.begin(), rem.eps->val.end());
     http::response<http::string_body> res;
     boost::beast::flat_buffer buf;
 
