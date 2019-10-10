@@ -31,11 +31,25 @@ namespace murk {
     return ret;
   }
 
+  inline data_ref xor_bytes_inplace(data_ref a, data_const_ref b) {
+    if (a.size() != b.size())
+      throw std::invalid_argument("Cannot XOR differently sized arrays");
+    std::transform(a.cbegin(), a.cend(),
+                   b.begin(), a.begin(), std::bit_xor<uint8_t>());
+    return a;
+  }
+
   inline data xor_bytes(data a, data_const_ref b) {
     if (a.size() != b.size())
       throw std::invalid_argument("Cannot XOR differently sized arrays");
     std::transform(a.cbegin(), a.cend(),
                    b.begin(), a.begin(), std::bit_xor<uint8_t>());
     return a;
+  }
+
+  namespace lit_ops {
+    inline data operator""_hex(const char* cs, size_t len) {
+      return hex_decode({cs, len});
+    }
   }
 }

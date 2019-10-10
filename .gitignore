@@ -6,3 +6,4 @@ foo/*/**
 # Except...
 !foo/dev/**
 !foo/cryptopals/**
+!foo/utils/**

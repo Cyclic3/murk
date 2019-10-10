@@ -1,5 +1,5 @@
 #include <murk/crypto/analysis.hpp>
-#include <murk/flows/file.hpp>
+#include <murk/flows/fs.hpp>
 #include <murk/flows/string.hpp>
 #include <murk/flows/seq.hpp>
 #include <murk/flows/web.hpp>

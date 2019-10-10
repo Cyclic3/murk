@@ -1,9 +1,9 @@
-#include "murk/flows/file.hpp"
+#include "murk/flows/fs.hpp"
 
 #include <fstream>
 #include <iostream>
 
-namespace murk::file {
+namespace murk::fs {
   std::filesystem::path home() {
     std::string ret;
 
@@ -23,6 +23,15 @@ namespace murk::file {
     throw std::runtime_error("Could not find a suitable home. Try setting MURK_HOME");
   }
 
+  std::filesystem::path temp() {
+    std::string ret;
+
+    if (const char* s = getenv("MURK_TEMP"); s != nullptr)
+      return {s};
+    else
+      return std::filesystem::temp_directory_path();
+  }
+
 
   std::string read_all_text(std::string path) {
     std::ifstream in{path, std::ios::in | std::ios::binary};
@@ -33,6 +42,19 @@ namespace murk::file {
     contents.resize(in.tellg());
     in.seekg(0, std::ios::beg);
     in.read(&contents[0], contents.size());
+    in.close();
+    return contents;
+  }
+
+  data read_all_bytes(std::string path) {
+    std::ifstream in{path, std::ios::in | std::ios::binary};
+    if (!in)
+      throw std::runtime_error("Could not open file");
+    data contents;
+    in.seekg(0, std::ios::end);
+    contents.resize(in.tellg());
+    in.seekg(0, std::ios::beg);
+    in.read(reinterpret_cast<char*>(contents.data()), contents.size());
     in.close();
     return contents;
   }

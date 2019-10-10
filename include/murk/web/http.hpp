@@ -56,6 +56,8 @@ namespace murk::web::http {
     }
   };
 
+  remote resolve(const uri&);
+
   struct address {
     remote base;
     std::string res;
@@ -85,12 +87,15 @@ namespace murk::web::http {
       ret += res;
       return ret;
     }
+
+    inline address() = default;
+    inline address(const uri& u) : base{resolve(u)}, res{u.res.render()} {}
+    inline address(std::string sv) : address{uri{sv}} {}
+    inline address(std::string_view sv) : address{uri{std::string{sv}}} {}
   };
 
   using http_req = boost::beast::http::request<boost::beast::http::string_body>;
   using http_res = boost::beast::http::response<boost::beast::http::string_body>;
-
-  remote resolve(const uri&);
 //    inline address navigate(remote rem, const uri::resource& res) {
 //      address ret;
 //      ret.base = rem;

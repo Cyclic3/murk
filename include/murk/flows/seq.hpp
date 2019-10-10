@@ -32,7 +32,7 @@ namespace murk {
   }
 
   template<typename Key, typename Value>
-  std::map<Key, Value> zip(nonstd::span<const Key> keys, nonstd::span<const Value> values) {
+  inline std::map<Key, Value> zip(nonstd::span<const Key> keys, nonstd::span<const Value> values) {
     if (keys.size() != values.size())
       throw std::invalid_argument("zip: There must be the same number of keys as values");
 
@@ -44,7 +44,7 @@ namespace murk {
   }
 
   template<typename From, typename To>
-  std::vector<To> cast_span(nonstd::span<const From> in) {
+  inline std::vector<To> cast_span(nonstd::span<const From> in) {
     std::vector<To> ret;
     std::transform(in.begin(), in.end(), std::back_inserter(ret),
                    [](From i) { return static_cast<To>(i); });
@@ -52,9 +52,79 @@ namespace murk {
   }
 
   template<typename From, typename To = From>
-  std::vector<To> translate_span(flow_t<From, To> mapper, nonstd::span<const From> in) {
+  inline std::vector<To> translate_span(flow_t<From, To> mapper, nonstd::span<const From> in) {
     std::vector<To> ret;
     std::transform(std::begin(in), std::end(in), std::back_inserter(ret), mapper);
+    return ret;
+  }
+
+  template<typename A, typename B, typename Iter>
+  inline std::map<A, B> tabulate(Iter begin, Iter end, flow_t<A, B> f) {
+    std::map<A, B> ret;
+    for (; begin != end; ++begin)
+      ret.emplace(*begin, f(*begin));
+    return ret;
+  }
+
+  template<typename A, typename B, typename Range>
+  inline std::map<A, B> tabulate(Range range, flow_t<A, B> f) {
+    std::map<A, B> ret;
+    for (const A& i : range)
+      ret.emplace(i, f(i));
+    return ret;
+  }
+
+  template<typename Iter, typename Comparable, typename T>
+  std::pair<T, Comparable> maximum(Iter begin, Iter end, flow_t<T, Comparable> f) {
+    std::map<T, Comparable> tbl = tabulate(begin, end, f);
+    if (tbl.empty())
+      throw std::invalid_argument("Cannot maximise empty set");
+    auto iter = tbl.begin();
+    auto max_iter = iter;
+    for (; iter != tbl.end(); ++iter)
+      if (iter->second > max_iter->second)
+        max_iter = iter;
+    return *max_iter;
+  }
+
+  template<typename Range, typename Comparable, typename T>
+  std::pair<T, Comparable> maximum(const Range& r, flow_t<T, Comparable> f) {
+    const std::map<T, Comparable> tbl = tabulate(r, f);
+    if (tbl.empty())
+      throw std::invalid_argument("Cannot maximise empty set");
+    auto iter = tbl.begin();
+    auto max_iter = iter;
+    for (; iter != tbl.end(); ++iter)
+      if (iter->second > max_iter->second)
+        max_iter = iter;
+    return *max_iter;
+  }
+
+  template<typename From, typename To, typename Iter>
+  std::vector<To> map(Iter begin, Iter end, flow_t<From, To> f) {
+    std::vector<To> ret;
+    for (; begin != end; ++begin)
+      ret.push_back(f(*begin));
+    return ret;
+  }
+
+  template<typename From, typename To, typename Range>
+  std::vector<To> map(Range range, flow_t<From, To> f) {
+    std::vector<To> ret;
+    for (const From& i : range)
+      ret.push_back(f(i));
+    return ret;
+  }
+
+  template<typename T>
+  std::vector<nonstd::span<T>> chunk(nonstd::span<T> s, size_t chunk_size) {
+    size_t n_full_chunks = s.size() / chunk_size;
+    size_t final_offset = n_full_chunks * chunk_size;
+    std::vector<nonstd::span<T>> ret;
+    ret.reserve(final_offset == s.size() ? n_full_chunks : n_full_chunks + 1);
+    for (size_t i = 0; i < final_offset; i += chunk_size)
+      ret.emplace_back(s.data() + i, chunk_size);
+    ret.emplace_back(s.data() + final_offset, s.end());
     return ret;
   }
 

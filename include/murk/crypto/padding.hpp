@@ -51,11 +51,28 @@ namespace murk::crypto {
   inline data pkcs7_add(size_t block_size, data b) {
     size_t padded_size = (b.size() + block_size) / block_size * block_size;
 
-    b.resize(padded_size, block_size - (b.size() % block_size));
+    b.resize(padded_size, static_cast<uint8_t>(block_size - (b.size() % block_size)));
     return b;
   }
-  inline data pkcs7_remove(data b) {
+  inline void pkcs7_add_copy(data_const_ref b, data_ref out) {
+    if (b.size() > out.size())
+      throw std::invalid_argument("Cannot fit padding");
+    auto out_pos = std::copy(b.begin(), b.end(), out.begin());
+
+    std::fill(out_pos, out.end(), out.end() - out_pos);
+  }
+  inline data_const_ref pkcs7_remove_ref(data_const_ref b) {
+    if (b.back() > b.size())
+      throw std::invalid_argument("Padding goes off the beginning of the array");
+    return { b.begin(), b.size() - b.back() };
+  }
+  inline void pkcs7_remove_inplace(data& b) {
+    if (b.back() > b.size())
+      throw std::invalid_argument("Padding goes off the beginning of the array");
     b.erase(b.end() - b.back(), b.end());
+  }
+  inline data pkcs7_remove(data b) {
+    pkcs7_remove_inplace(b);
     return b;
   }
 

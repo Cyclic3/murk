@@ -5,13 +5,14 @@
 #include <string>
 #include <filesystem>
 
-namespace murk::file {
+namespace murk::fs {
   std::filesystem::path home();
+  std::filesystem::path temp();
 
   std::string read_all_text(std::string path);
+  data read_all_bytes(std::string path);
 
   void write_all_text(std::string path, std::string_view str);
-
   void write_all_bytes(std::string path, data_const_ref b);
 
   std::vector<std::string> read_all_lines(std::string path);

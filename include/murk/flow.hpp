@@ -90,9 +90,6 @@ namespace murk {
       std::cout << prompt_name << "< " << f(line) << std::endl;
   }
 
-  struct link_t {};
-  inline constexpr link_t link;
-
   template<typename ...Args>
   using args = std::tuple<Args...>;
 
