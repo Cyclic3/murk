@@ -3,6 +3,7 @@
 #include <fmt/format.h>
 #include <fmt/color.h>
 
+#include <mutex>
 #include <functional>
 #include <tuple>
 #include <iostream>
@@ -23,31 +24,61 @@ namespace murk {
   using flow_left_t = std::function<Out(In, Param)>;
 
   template<typename In, typename Out>
-  struct Flow {
-    virtual Out operator()(In) = 0;
-    virtual ~Flow() = default;
+  struct threaded_flow_t {
+    flow_t<In, Out> base;
+
+    inline Out operator()(In in) const { return base(std::forward<In>(in)); }
+    inline operator const decltype(base)&() const { return base; }
+
+    threaded_flow_t() = default;
+    inline threaded_flow_t(flow_t<In, Out> f) {
+      base = [f{std::move(f)}](In i) -> Out {
+          static std::mutex m;
+          std::unique_lock lock{m};
+          return f(std::forward<In>(i));
+      };
+    }
+
+    template<typename... Args>
+    inline static threaded_flow_t create(Args&&... args) {
+      threaded_flow_t ret;
+      ret.base = {std::forward<Args&&>(args)...};
+      return ret;
+    }
   };
 
   template<typename In>
-  flow_t<In> in() {
+  inline flow_t<In> in() {
     return [](In i) -> In { return i; };
   }
 
   template<typename From, typename To>
-  To cast(From f) {
+  inline To cast(From f) {
     return static_cast<To>(f);
   }
 
+  inline void log(std::string format) {
+    fmt::print(format);
+    fmt::print("\n");
+    fflush(stdout);
+  }
+
   template<typename First, typename... Args>
-  First log(std::string format, First&& first, Args&&... args) {
+  inline First log(std::string format, First&& first, Args&&... args) {
     fmt::print(format, first, args...);
     fmt::print("\n");
     fflush(stdout);
     return first;
   }
 
+  inline void alert(std::string format) {
+    fmt::print(fmt::bg(fmt::color::red), format);
+    fmt::print("\n");
+    fflush(stdout);
+  }
+
   template<typename First, typename... Args>
-  First alert(std::string format, First&& first, Args&&... args) {
+  inline First alert(std::string format, First&& first, Args&&... args) {
     fmt::print(fmt::bg(fmt::color::red), format, first, args...);
     fmt::print("\n");
     fflush(stdout);
@@ -55,7 +86,7 @@ namespace murk {
   }
 
   template<typename T>
-  T accept(flow_t<T, bool> checker, T t) {
+  inline T accept(flow_t<T, bool> checker, T t) {
     if (checker(t))
       return t;
     else
@@ -63,7 +94,7 @@ namespace murk {
   }
 
   template<typename T>
-  T reject(flow_t<T, bool> checker, T t) {
+  inline T reject(flow_t<T, bool> checker, T t) {
     if (checker(t))
       throw std::runtime_error("Rejected");
     else
@@ -71,7 +102,7 @@ namespace murk {
   }
 
   template<typename T>
-  T expect(const T& val, const T& t) {
+  inline T expect(const T& val, const T& t) {
     if (val != t)
       throw std::runtime_error("Unexpected");
     else
@@ -79,12 +110,12 @@ namespace murk {
   }
 
   template<typename T, typename... Args>
-  T construct(T, Args&&... args) {
+  inline T construct(T, Args&&... args) {
     return {std::forward<Args&&>(args)...};
   }
 
   template<typename F>
-  void interactive(F f, std::string prompt_name = "") {
+  inline void interactive(F f, std::string prompt_name = "") {
     std::string line;
     while (((void)(std::cout << prompt_name << "> "), std::getline(std::cin, line)) && !line.empty())
       std::cout << prompt_name << "< " << f(line) << std::endl;
@@ -104,14 +135,14 @@ namespace murk {
     template<typename Func, typename P>
     inline auto operator<(Func f, P p) {
       return [f{std::move(f)}, p{std::move(p)}](auto... args) {
-        return f(p, args...);
+        return f(p, std::forward<decltype(args)>(args)...);
       };
     }
 
     template<typename Func, typename P>
     inline auto operator>(Func f, P p) {
       return [f{std::move(f)}, p{std::move(p)}](auto... args) {
-        return f(args..., p);
+        return f(std::forward<decltype(args)>(args)..., p);
       };
     }
 

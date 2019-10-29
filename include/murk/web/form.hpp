@@ -28,5 +28,7 @@ namespace murk::web {
   std::string multipart_formdata_encode(const multiform_t& form, std::string_view boundary);
   multiform_t multipart_formdata_decode(std::string_view form, std::string_view boundary);
   std::string form_url_encode(const form_t& form);
+  /// Does not escape
+  std::string form_url_encode_dodgy(const form_t& form);
   form_t form_url_decode(std::string_view form);
 }

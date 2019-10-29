@@ -12,8 +12,8 @@ int main() {
 
   auto res = murk::maximum(lines, score).first;
 
-  auto k =  murk::crypto::xor_single::crack(murk::crypto::dist_conv(murk::crypto::twist_char_dist), res);
-  auto plain = murk::crypto::xor_single::decrypt(k, res);
+  auto k =  murk::crypto::xor_single::crack(res, murk::crypto::dist_conv(murk::crypto::twist_char_dist));
+  auto plain = murk::crypto::xor_single::crypt(res, k);
   murk::log("{}", murk::deserialise<std::string>(plain));
 }
 

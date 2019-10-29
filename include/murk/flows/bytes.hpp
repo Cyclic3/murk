@@ -48,6 +48,12 @@ namespace murk {
   }
 
   namespace lit_ops {
+    inline data operator""_b(const char* cs, size_t len) {
+      return serialise(std::string_view{cs, len});
+    }
+    inline data operator""_b64(const char* cs, size_t len) {
+      return base64_decode({cs, len});
+    }
     inline data operator""_hex(const char* cs, size_t len) {
       return hex_decode({cs, len});
     }

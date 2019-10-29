@@ -1,6 +1,6 @@
 #pragma once
 
-#include "murk/flows/web.hpp"
+#include "murk/web/form.hpp"
 #include "murk/flows/string.hpp"
 #include "murk/random.hpp"
 
@@ -28,4 +28,6 @@ namespace murk::plod {
   std::string js_post(std::string_view url, web::multiform_t form) {
     return js_xmlhttpreq("POST", url, "multpart/form-data", web::multipart_formdata_encode(form, random::random_alnum(16)));
   }
+  constexpr char* js_enum_func = "for(var item in window)if(typeof window[item]=='function')console.log(item.toString());";
+  constexpr char* js_dump_func = "for(var item in window){if(typeof window[item]=='function'){var i=item.toString(); console.log(eval(i+'.toString()'))}};";
 }

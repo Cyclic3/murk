@@ -18,7 +18,7 @@ namespace murk {
   }
 
   inline data_const_ref get_data_const_ref(std::string_view s) {
-    data_const_ref ret{reinterpret_cast<const uint8_t*>(s.data()), s.size()};
+    data_const_ref ret{reinterpret_cast<const uint8_t*>(s.data()), static_cast<data_const_ref::index_type>(s.size())};
     return ret;
   }
 
@@ -28,6 +28,10 @@ namespace murk {
   template<>
   inline std::string deserialise<std::string>(data_const_ref b) {
     return {b.begin(), b.end()};
+  }
+  template<>
+  inline std::string_view deserialise<std::string_view>(data_const_ref b) {
+    return {reinterpret_cast<const char*>(b.data()), static_cast<std::string_view::size_type>(b.size())};
   }
 
   template<typename Int>

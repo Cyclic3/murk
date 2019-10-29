@@ -150,4 +150,27 @@ namespace murk {
       ++ret[i];
     return ret;
   }
+
+  template<typename T, typename Iter>
+  inline std::vector<T> repeat(Iter begin, Iter end, size_t count) {
+    std::vector<T> ret;
+    ret.reserve(end - begin);
+    for(size_t i = 0; i < count; ++i)
+      ret.insert(ret.end(), begin, end);
+    return ret;
+  }
+
+  template<typename T, typename Range>
+  inline std::vector<T> repeat(Range r, size_t count) {
+    return repeat<T>(std::begin(r), std::end(r), count);
+  }
+
+  template<typename T, typename Range>
+  inline std::vector<T> filter(Range r, flow_t<const T&, bool> filt) {
+    std::vector<T> ret;
+    for (auto& i : r)
+      if (filt(i))
+        ret.emplace_back(i);
+    return ret;
+  }
 }

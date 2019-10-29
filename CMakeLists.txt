@@ -20,6 +20,7 @@ find_package(OpenSSL REQUIRED)
 find_package(Threads REQUIRED)
 find_package(TBB REQUIRED)
 find_package(Botan REQUIRED)
+find_package(Doxygen REQUIRED)
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/cppthings)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/span-lite)
@@ -52,6 +53,10 @@ target_include_directories(murk
   ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
+set(DOXYGEN_WARN_IF_UNDOCUMENTED NO)
+doxygen_add_docs(murk-docs ${CMAKE_CURRENT_SOURCE_DIR}/include)
+add_dependencies(murk murk-docs)
+
 include(GNUInstallDirs REQUIRED)
 install(TARGETS murk
     EXPORT Murk
@@ -61,12 +66,6 @@ install(TARGETS murk
 )
 set_target_properties(murk PROPERTIES EXPORT_NAME Murk)
 
-enable_testing()
-find_package(GTest REQUIRED)
-file(GLOB_RECURSE tests_source test/*.cpp)
-add_executable(tests ${tests_source})
-target_link_libraries(tests murk GTest::GTest)
-gtest_discover_tests(tests)
 
 file(GLOB_RECURSE foo_source foo/*.cpp)
 foreach(foo ${foo_source})

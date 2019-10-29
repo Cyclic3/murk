@@ -30,6 +30,17 @@ namespace murk::web {
   }
   multiform_t multipart_formdata_decode(std::string_view form, std::string_view boundary);
 
+  std::string form_url_encode_dodgy(const form_t& form) {
+    std::string ret;
+
+    for (auto& i : form) {
+      ret.append(fmt::format("{}={}&", i.first, i.second));
+    }
+    ret.pop_back();
+
+    return ret;
+  }
+
   std::string form_url_encode(const form_t& form) {
     std::string ret;
 

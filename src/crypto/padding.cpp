@@ -13,7 +13,7 @@
 namespace murk::crypto {
   /// TODO: Stop unnecessary alloc for plaintext
   template<bool decrypt>
-  data pkcs7_padding_oracle_internal(const flow_t<enciphered_msg, bool>& oracle,
+  data pkcs7_padding_oracle_internal(const threaded_flow_t<enciphered_msg, bool>& oracle,
                                      enciphered_msg scapegoat,
                                      log_params log) {
 
@@ -136,7 +136,7 @@ namespace murk::crypto {
   }
 
   // Thanks https://blog.skullsecurity.org/2013/padding-oracle-attacks-in-depth
-  data pkcs7_padding_oracle_decrypt(flow_t<enciphered_msg, bool> oracle,
+  data pkcs7_padding_oracle_decrypt(threaded_flow_t<enciphered_msg, bool> oracle,
                                     std::vector<data> blocks,
                                     log_params log) {
     if (blocks.size() < 2)
@@ -160,7 +160,7 @@ namespace murk::crypto {
   }
 
   // Thanks https://blog.skullsecurity.org/2016/going-the-other-way-with-padding-oracles-encrypting-arbitrary-data
-  enciphered_msg pkcs7_padding_oracle_encrypt(flow_t<enciphered_msg, bool> oracle, size_t block_size, data msg, log_params log) {
+  enciphered_msg pkcs7_padding_oracle_encrypt(threaded_flow_t<enciphered_msg, bool> oracle, size_t block_size, data msg, log_params log) {
     // special case
     if (msg.size() == 0) {
       enciphered_msg to_send;

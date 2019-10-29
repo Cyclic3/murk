@@ -1,5 +1,3 @@
-unset(BOTAN_INCLUDE_DIRS)
-
 find_path(BOTAN_INCLUDE_DIRS
   PATH_SUFFIXES botan-2
   NAMES botan/botan.h

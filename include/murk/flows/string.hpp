@@ -73,4 +73,20 @@ namespace murk {
       ret.append(escape_c_char(i));
     return ret;
   }
+
+  inline std::string pad_left(std::string_view in, size_t width, char padding = ' ') {
+    if (width < in.size())
+      throw std::invalid_argument("Cannot negatively pad string");
+    std::string ret(width - in.size(), padding);
+    ret.insert(ret.end(), in.begin(), in.end());
+    return ret;
+  }
+
+  inline std::string pad_right(std::string_view in, size_t width, char padding = ' ') {
+    if (width < in.size())
+      throw std::invalid_argument("Cannot negatively pad string");
+    std::string ret(in.begin(), in.end());
+    ret.insert(ret.end(), width - in.size(), padding);
+    return ret;
+  }
 }

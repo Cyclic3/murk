@@ -1,9 +1,9 @@
-#include <murk/common.hpp>
-
 #include <murk/crypto/block.hpp>
 
 #include <botan/block_cipher.h>
 #include <botan/auto_rng.h>
+
+#include <murk/common.hpp>
 
 static thread_local Botan::AutoSeeded_RNG rng{};
 

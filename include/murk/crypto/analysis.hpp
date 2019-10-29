@@ -55,17 +55,30 @@ namespace murk::crypto {
     dist_t ret;
     size_t count = 0;
 
-    for (auto i : m)
+    for (auto& i : m)
       count += i.second;
 
-    for (auto i : m)
-      ret[i.first] = static_cast<float>(i.second) / static_cast<float>(count);
+    for (auto& i : m)
+      ret[i.first] = static_cast<freq_t>(i.second) / static_cast<freq_t>(count);
 
     return ret;
   }
 
-  inline std::vector<std::pair<token_t, float>> sort_freq(const dist_t& m) {
-    std::vector<std::pair<token_t, float>> ret;
+  inline dist_t renormalise_freq(const dist_t& dist) {
+    dist_t ret = dist;
+    freq_t count = 0;
+
+    for (auto& i : ret)
+      count += i.second;
+
+    for (auto& i : ret)
+      i.second *= count;
+
+    return ret;
+  }
+
+  inline std::vector<std::pair<token_t, freq_t>> sort_freq(const dist_t& m) {
+    std::vector<std::pair<token_t, freq_t>> ret;
     ret.insert(ret.begin(), m.cbegin(), m.cend());
     std::sort(ret.begin(), ret.end(), [](auto a, auto b) { return a.second > b.second; });
     return ret;

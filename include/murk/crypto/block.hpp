@@ -10,9 +10,8 @@
 #include <set>
 
 namespace murk::crypto {
-  // Given any decent block size, there should be no repititions.
-  //
-  // If there is, we win!
+  /// Looks for block repetitions in the ciphertext,
+  /// which have a insignificant chance of occuring in any other mode
   inline bool ecb_detect(murk::data_const_ref ctext, size_t block_size) {
     using namespace murk::flow_ops;
 
@@ -29,74 +28,108 @@ namespace murk::crypto {
     return false;
   }
 
-  inline bool ecb_oracle(murk::flow_t<data_const_ref, data> system, size_t block_size) {
-    return ecb_detect(system(data(block_size * 4, 0)), block_size);
+  /// A function that determines whether an oracle uses ECB mode
+  inline bool ecb_oracle(murk::flow_t<data_const_ref, data> oracle, size_t block_size) {
+    return ecb_detect(oracle(data(block_size * 4, 0)), block_size);
   }
+  
+  /// TODO: write this!
+//  inline bool ecb_get_block_size(murk::flow_t<data_const_ref, data> oracle) {
+//    size_t i = 1;
+//    data b;
+//    while (true) {
+//      if (oracle()
+//    }
+          
+//    return i / 2;
+//  }
 
+  /// Encrypts data using the ECB mode
   inline data ecb_encrypt(data_const_ref b, const Botan::BlockCipher& bc) {
     murk::data ret(b.size());
-    bc.encrypt(b.data(), ret.data());
+    bc.encrypt_n(b.data(), ret.data(), b.size() / bc.block_size());
     return ret;
   }
+
+  /// Decrypts data using the ECB mode
   inline data ecb_decrypt(data_const_ref b, const Botan::BlockCipher& bc) {
     murk::data ret(b.size());
-    bc.decrypt(b.data(), ret.data());
+    bc.decrypt_n(b.data(), ret.data(), b.size() / bc.block_size());
     return ret;
   }
 
-  inline data cbc_encrypt(data_const_ref b, data_const_ref iv, const Botan::BlockCipher& bc) {
-    const auto block_size = bc.block_size();
-    const auto n_full_blocks = b.size() / block_size;
-    const auto remainder_len = b.size() % block_size;
-    const auto final_offset = n_full_blocks * block_size;
+  data ecb_crack_prepend_oracle(threaded_flow_t<data_const_ref, data> oracle, size_t block_size, uint8_t spam_byte = 'C', log_params log = {});
 
-    if (iv.size() != block_size)
-      throw std::invalid_argument("IV length must be the same as the block size");
+  // It doesn't matter if we run into the real ptext, as it will have no effect on our block
+  inline data ecb_guess_spammed_block(flow_t<data_const_ref, data> oracle, size_t block_size, uint8_t spam_byte = 'A') {
+    size_t min_expected = 2;
+    // Let's look for a repeated spam block
+    murk::data spam(block_size * 4, spam_byte);
 
-    data ret(final_offset + block_size);
+    while(true) {
+      auto res = oracle(spam);
+      std::map<murk::data, size_t> counts;
+      for (auto& i : chunk<const uint8_t>(res, block_size))
+        ++counts[{i.begin(), i.end()}];
+      const data* potential_ret = nullptr;
+      for (auto& i : counts) {
+        // Greater than to deal with data replication
+        if (i.second > min_expected) {
+          // Check if someone beat us to it
+          if (potential_ret)
+            goto skip;
+          else
+            potential_ret = &i.first;
+        }
+      }
 
-    std::copy(iv.begin(), iv.end(), ret.begin());
+      // If we get here, we had at most one candidate
+      if (potential_ret)
+        return *potential_ret;
+      else
+        throw std::invalid_argument("Managed to discount valid spam block");
 
-    for (size_t i = 0; i < final_offset; i += block_size) {
-      auto src = b.subspan(i, block_size);
-      uint8_t* dest_begin = ret.data() + i;
-      xor_bytes_inplace({dest_begin, block_size}, src);
-      bc.encrypt(dest_begin);
-      auto next = dest_begin + block_size;
-      std::copy(dest_begin, next, next);
+      skip:
+      ++min_expected;
+      spam.insert(spam.end(), block_size, spam_byte);
     }
-
-    // Manual padding to stop copying or mallocs
-    xor_bytes_inplace(data_ref{ret}.subspan(final_offset, b.size() % block_size), b.subspan(final_offset));
-    auto final_padding = data_ref{ret}.subspan(final_offset + remainder_len);
-    auto padding_val = static_cast<uint8_t>(final_padding.size());
-    for (auto& i : final_padding)
-      i ^= padding_val;
-    bc.encrypt(ret.data() + final_offset);
-
-    return ret;
   }
 
-  inline data cbc_decrypt(data_const_ref b, data_const_ref iv, const Botan::BlockCipher& bc) {
-    const auto block_size = bc.block_size();
+  // Returns a tuple of the spam needed, and the resultant data offset
+  std::pair<data, size_t> ecb_determine_spam(flow_t<data_const_ref, data> insert_oracle, size_t block_size,
+                                             uint8_t spam_byte = 'A', size_t repetitions = 2);
 
-    if (iv.size() != block_size)
-      throw std::invalid_argument("IV length must be the same as the block size");
-    if (b.size() % block_size)
-      throw std::invalid_argument("Blocks must be a multiple of the block size");
+  /// Encrypts arbitrary blocks
+  flow_t<data_const_ref, data> ecb_make_block_enc_oracle(flow_t<data_const_ref, data> insert_oracle,
+                                                         size_t block_size, std::pair<data, size_t> spam_res);
 
-    data ret(b.size());
-
-    for (size_t i = 0; i < b.size(); i += block_size) {
-      uint8_t* dest_begin = ret.data() + i;
-      bc.decrypt(b.data() + i, dest_begin);
-
-      data_const_ref old_ctext = i ? b.subspan(i - block_size, block_size) : iv;
-      xor_bytes_inplace({dest_begin, block_size}, old_ctext);
-    }
-
-    pkcs7_remove_inplace(ret);
-
-    return ret;
+  /// A specialist adaptor similar to ecb_make_block_enc_oracle, but without removing the end
+  inline flow_t<data_const_ref, data> bypass_fixed_prefix_len(flow_t<data_const_ref, data> oracle, std::pair<data, size_t> spam_res) {
+    return [oracle{std::move(oracle)}, spam_res{std::move(spam_res)}](data_const_ref b) -> data {
+      data in = spam_res.first;
+      in.insert(in.end(), b.begin(), b.end());
+      auto res = oracle(in);
+      res.erase(res.begin(), res.begin() + static_cast<ssize_t>(spam_res.second));
+      return res;
+    };
   }
+
+  /// Basically repeats until we get what we want!
+  ///
+  /// Assumes that a double spammed block is not in the prefix, which, if it was truly random or independent of the input,
+  /// would be a good assumption. The double spammed block must also not be in the passed data. Sorry.
+  /// Use a different spam_byte if this is a problem.
+  ///
+  /// Also be aware that the prefix must have a non-zero probability of being block aligned. Mess with the oracle until this is the case.
+  ///
+  /// @param final_spam_byte Must be different from spam_byte
+  flow_t<data_const_ref, data> ecb_bypass_random_prefix_len(flow_t<data_const_ref, data> oracle, size_t block_size,
+                                                            uint8_t spam_byte = 'B', uint8_t final_spam_byte = 'b', size_t repetitions = 1);
+
+  data cbc_encrypt(data_const_ref b, data_const_ref iv, const Botan::BlockCipher& bc);
+
+  data cbc_decrypt(data_const_ref b, data_const_ref iv, const Botan::BlockCipher& bc);
+
+  /// Given a fixed prefix oracle, calculates the spam required to make block_aligned data
+  std::pair<data, size_t> cbc_determine_spam(flow_t<data_const_ref, data> oracle, size_t block_size, uint8_t spam_byte = 'Q');
 }
