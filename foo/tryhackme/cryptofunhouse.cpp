@@ -87,15 +87,22 @@ int main() {
 
     // This leaves us with a polyalphabetic repeated cipher, so we can use a similar tatic to xor_vigenere!
   }
-  {
-    auto squish = [](murk::crypto::aes::table_ref_t tab) {
-      murk::crypto::aes::unshift_rows(tab);
-      murk::crypto::aes::unsub_bytes(tab);
-    };
 
-    auto ctexts = murk::map<std::string, murk::data>(murk::fs::read_all_lines("/tmp/ciphertexts.txt"),
-                                                     murk::flow_t<std::string, murk::data>(murk::hex_decode));
-    for (auto& i : ctexts)
+  murk::crypto::vigenere::key_t key;
+  const auto ctexts = murk::map<std::string, murk::data>(murk::fs::read_all_lines("/tmp/ciphertexts.txt"),
+                                                         murk::flow_t<std::string, murk::data>(murk::hex_decode));
+
+
+  auto squish = [](murk::crypto::aes::table_ref_t tab) {
+    murk::crypto::aes::unshift_rows(tab);
+    murk::crypto::aes::unsub_bytes(tab);
+  };
+
+  std::vector<murk::data> squished = ctexts;
+
+  {
+
+    for (auto& i : squished)
       squish(i);
 
     auto b = "67a2401f0f36c3b680abb775ecedf311"_hex;
@@ -115,34 +122,30 @@ int main() {
     auto filtered_text = murk::filter<char>(text, [](auto i) { return i == ' ' || ::islower(i); });
     auto mod_dist = murk::crypto::normalise_freq(murk::count<murk::crypto::token_t>(dist_tokens));
 
-//    auto mod_dist = murk::crypto::dist_conv(murk::crypto::twist_char_dist);
-
-//    for (auto& i : mod_dist) {
-//      if (::isupper(i.first))
-//        mod_dist[::tolower(i.first)] += i.second;
-//    }
-
-//    bool got_one;
-//    do {
-//      got_one = false;
-//      for (auto iter = mod_dist.begin(); iter != mod_dist.end(); ++iter) {
-//        if (iter->first != ' ' && !::islower(iter->first)) {
-//          mod_dist.erase(iter);
-//          got_one = true;
-//          break;
-//        }
-//      }
-//    }
-//    while(got_one);
-
     mod_dist = murk::crypto::renormalise_freq(mod_dist);
 
     murk::data pile;
-    for (auto& i : ctexts)
+    for (auto& i : squished)
       pile.insert(pile.end(), i.begin(), i.end());
-    auto key = murk::crypto::vigenere::crack(pile, mod_dist, 16);
+    key = murk::crypto::vigenere::crack(pile, mod_dist, 16);
 
     auto res = murk::crypto::vigenere::crypt(b, key);
     murk::log("4.1: {}", murk::deserialise<std::string_view>(res));
+  }
+
+  {
+    {
+      murk::crypto::aes::round_constant_t rc;
+      for (auto i = 1; i <= 10; ++i) {
+        murk::crypto::aes::update_round_constant(i, rc);
+        murk::log("{:x}", rc[0]);
+      }
+    }
+
+    auto ctext_1 = "67a2401f0f36c3b680abb775ecedf311"_hex, ptext_1 = "rijndael is king"_b;
+    auto ctext_2 = "0c9e246cb8a1bfa3b0e947a1a94c8d11"_hex, ptext_2 = "the economy of m"_b;
+
+    squish(ctext_1); squish(ctext_2);
+//    murk::log("4.3: {}", murk::deserialise<std::string_view>(res));
   }
 }
