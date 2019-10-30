@@ -8,7 +8,7 @@
 
 int main() {
   auto ctext = murk::base64_decode(murk::fs::read_all_text("/tmp/set1_challenge7")); //murk::base64_decode(murk::fs::read_all_text(murk::ext::mgr.obtain("https://cryptopals.com/static/challenge-data/7.txt")));
-  auto key = murk::serialise(u8"YELLOW SUBMARINE");
+  auto key = "YELLOW SUBMARINE"_b;
 
   auto cypher = Botan::BlockCipher::create_or_throw("AES-128");
   cypher->set_key(key);

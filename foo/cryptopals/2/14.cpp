@@ -45,7 +45,7 @@ int main() {
 
     auto spam_res = murk::crypto::ecb_determine_spam(oracle, 16);
 
-    auto normalised_oracle = murk::crypto::ecb_bypass_fixed_prefix_len(oracle, spam_res);
+    auto normalised_oracle = murk::crypto::bypass_fixed_prefix_len(oracle, spam_res);
 
     auto res = murk::crypto::ecb_crack_prepend_oracle(normalised_oracle, 16);
 
