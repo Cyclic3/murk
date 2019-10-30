@@ -7,3 +7,4 @@ foo/*/**
 !foo/dev/**
 !foo/cryptopals/**
 !foo/utils/**
+!foo/tryhackme/**
