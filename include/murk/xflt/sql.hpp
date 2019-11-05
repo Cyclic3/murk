@@ -135,7 +135,7 @@ namespace murk::xflt::sql {
   std::string list_dbs_v(size_t fields = 1) {
     std::string ret = "SELECT ";
     for (size_t i = 0; i < fields; ++i)
-      ret += "GROUP_CONCAT(information_schema.tables),";
+      ret += "GROUP_CONCAT(schema_name),";
     ret.pop_back();
     ret += "FROM information_schema.schemata";
     return ret;

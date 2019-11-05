@@ -27,6 +27,7 @@ namespace murk::crypto::aes {
 
   using table_t = std::array<uint8_t, state_size>;
   using table_ref_t = nonstd::span<uint8_t, state_size>;
+  using round_constant_t = std::array<uint8_t, 4>;
 
   inline void sub_bytes(table_ref_t tab) {
     for (auto& i : tab)
@@ -83,5 +84,96 @@ namespace murk::crypto::aes {
 
   inline void add_round_key(table_ref_t tab, table_ref_t key) {
     murk::xor_bytes_inplace(tab, key);
+  }
+
+  /// If you end up using this namespace, something has gone _very_ wrong
+  namespace rcon_detail {
+    /// @param i the 0-indexed round number, but NOT 0!!!
+    constexpr inline void update_round_constant(round_constant_t& prev, uint8_t i) {
+      [[unlikely]]
+      if (i == 1)
+        prev = {1, 0, 0, 0};
+      else {
+        uint16_t f = prev.front();
+        f = (f << 1) ^ (0x11b & -(f >> 7));
+        prev[0] = f;
+      }
+    }
+
+    constexpr round_constant_t round_constants[11] = {
+      {0x01, 0x00, 0x00, 0x00},
+      {0x02, 0x00, 0x00, 0x00},
+      {0x04, 0x00, 0x00, 0x00},
+      {0x08, 0x00, 0x00, 0x00},
+      {0x10, 0x00, 0x00, 0x00},
+      {0x20, 0x00, 0x00, 0x00},
+      {0x40, 0x00, 0x00, 0x00},
+      {0x80, 0x00, 0x00, 0x00},
+      {0x1B, 0x00, 0x00, 0x00},
+      {0x36, 0x00, 0x00, 0x00}
+    };
+
+    inline void rot_word(round_constant_t& rcon) {
+      uint8_t b;
+      b = rcon[0];
+      rcon[0] = rcon[1];
+      rcon[1] = rcon[2];
+      rcon[2] = rcon[3];
+      rcon[3] = b;
+    }
+
+    inline void sub_word(round_constant_t& rcon) {
+      rcon[0] = sbox[rcon[0]];
+      rcon[1] = sbox[rcon[1]];
+      rcon[2] = sbox[rcon[2]];
+      rcon[3] = sbox[rcon[3]];
+    }
+
+    inline void schedule_core(round_constant_t& rcon, uint8_t i) {
+      rot_word(rcon);
+      sub_word(rcon);
+      rcon[0] ^= round_constants[i - 1][0];
+    }
+  }
+
+  template<int KeyBits>
+  constexpr int get_round_count();
+  template<>
+  constexpr int get_round_count<128>() { return 11; }
+  template<>
+  constexpr int get_round_count<176>() { return 13; }
+  template<>
+  constexpr int get_round_count<256>() { return 15; }
+
+  template<int KeyBits>
+  using round_keys_t = std::array<table_t, get_round_count<KeyBits>()>;
+
+  template<int KeyBits>
+  inline void expand_key(round_keys_t<KeyBits>& out, nonstd::span<const uint8_t, KeyBits / 8> key);
+
+  template<>
+  inline void expand_key<128>(round_keys_t<128>& out, nonstd::span<const uint8_t, 128 / 8> key) {
+    std::copy(key.begin(), key.end(), out.front().begin());
+
+    round_constant_t t;
+
+    for (size_t round = 1; round < get_round_count<128>(); ++round) {
+      auto& out_round = out[round];
+      for (size_t word_start = 0; word_start < 16;) {
+        if (word_start == 0) {
+          auto& target = out[round - 1];
+          std::copy(target.begin() + 12, target.end(), t.begin());
+          rcon_detail::schedule_core(t, round);
+        }
+        else {
+          std::copy(out_round.begin() + word_start - 4, out_round.begin() + word_start, t.begin());
+        }
+        auto in_round = out[round - 1];
+        for (size_t a = 0; a < 4; ++a) {
+          out_round[word_start] = in_round[word_start] ^ t[a];
+          ++word_start;
+        }
+      }
+    }
   }
 }
