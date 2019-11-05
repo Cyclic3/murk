@@ -100,7 +100,7 @@ namespace murk::crypto::aes {
       }
     }
 
-    constexpr round_constant_t round_constants[10] = {
+    constexpr round_constant_t round_constants[11] = {
       {0x01, 0x00, 0x00, 0x00},
       {0x02, 0x00, 0x00, 0x00},
       {0x04, 0x00, 0x00, 0x00},
@@ -132,7 +132,7 @@ namespace murk::crypto::aes {
     inline void schedule_core(round_constant_t& rcon, uint8_t i) {
       rot_word(rcon);
       sub_word(rcon);
-      update_round_constant(rcon, i);
+      rcon[0] ^= round_constants[i - 1][0];
     }
   }
 
@@ -155,14 +155,25 @@ namespace murk::crypto::aes {
   inline void expand_key<128>(round_keys_t<128>& out, nonstd::span<const uint8_t, 128 / 8> key) {
     std::copy(key.begin(), key.end(), out.front().begin());
 
-    table_t t;
+    round_constant_t t;
 
     for (size_t round = 1; round < get_round_count<128>(); ++round) {
-      for (uint8_t word = 0; word < 4; ++word) {
-//        auto base = t.
-        std::copy(,,t.begin())
+      auto& out_round = out[round];
+      for (size_t word_start = 0; word_start < 16;) {
+        if (word_start == 0) {
+          auto& target = out[round - 1];
+          std::copy(target.begin() + 12, target.end(), t.begin());
+          rcon_detail::schedule_core(t, round);
+        }
+        else {
+          std::copy(out_round.begin() + word_start - 4, out_round.begin() + word_start, t.begin());
+        }
+        auto in_round = out[round - 1];
+        for (size_t a = 0; a < 4; ++a) {
+          out_round[word_start] = in_round[word_start] ^ t[a];
+          ++word_start;
+        }
       }
-      if ()
     }
   }
 }
