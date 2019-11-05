@@ -183,4 +183,18 @@ namespace murk::web {
     }
     return ret;
   }
+
+  std::string uri::decode(std::string_view str) {
+    std::string ret;
+
+    for (auto iter = str.begin(); iter != str.end(); ++iter) {
+      if (*iter == '%') {
+        std::string s{*++iter, *++iter};
+        ret.push_back(static_cast<char>(std::stoi(s, 0, 16)));
+      }
+      else
+        ret.push_back(*iter);
+    }
+    return ret;
+  }
 }

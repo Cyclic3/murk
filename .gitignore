@@ -8,3 +8,4 @@ foo/*/**
 !foo/cryptopals/**
 !foo/utils/**
 !foo/tryhackme/**
+!foo/deloite/**
