@@ -3,17 +3,18 @@
 #include <murk/flow.hpp>
 #include <murk/data.hpp>
 
+#define TBB_PREVIEW_CONCURRENT_ORDERED_CONTAINERS true
+#include <tbb/concurrent_map.h>
+
+#include <botan/block_cipher.h>
+
 #include <cppthings/safe_iter.hpp>
 
 #include <atomic>
 #include <map>
 #include <optional>
 #include <thread>
-
 #include <iostream>
-
-#define TBB_PREVIEW_CONCURRENT_ORDERED_CONTAINERS true
-#include <tbb/concurrent_map.h>
 
 namespace murk::crypto {
   /// A known-plaintext attack on a doubly applied cypher (maybe I'll do multi-dimensional later)
@@ -109,34 +110,12 @@ namespace murk::crypto {
     );
   }
 
-//  template<size_t BlockSize>
-//  struct block_iter_t {
-//    std::array<uint8_t, BlockSize> block;
-//    bool end;
-
-//    inline block_iter_t& operator++(int) {
-//      auto i = block.rbegin();
-//      while (!*i++) {
-//        if (i == block.rend()) {
-//          end = true;
-//          break;
-//        }
-//      }
-
-//      return *this;
-//    }
-
-//    template<typename Int>
-//    inline block_iter_t& operator+=(Int n) {
-//      auto i = block.rbegin();
-//      while (!*i++) {
-//        if (i == block.rend()) {
-//          end = true;
-//          break;
-//        }
-//      }
-
-//      return *this;
-//    }
-//  };
+  template<typename... KeyT>
+  inline void decrypt_n(murk::data_ref data, Botan::BlockCipher& bc,
+                        data_const_ref k, KeyT... keys) {
+    bc.set_key(k.data(), k.size());
+    bc.decrypt_n(data.data(), data.data(), data.size() / bc.block_size());
+    if constexpr (sizeof...(keys))
+      decrypt_n(data, bc, keys...);
+  }
 }
