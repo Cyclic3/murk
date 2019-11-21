@@ -27,5 +27,7 @@ namespace murk {
     virtual bool avail() = 0;
     /// Returns 0 if not well defined
     virtual size_t max_buf() { return 0; }
+
+    virtual ~byte_dgram() = default;
   };
 }
