@@ -52,6 +52,7 @@ namespace murk {
   subprocess::subprocess(std::string program, nonstd::span<std::string> args) :
     impl{std::make_unique<impl_t>(program, boost::process::args(args))} {}
 
+  subprocess::~subprocess() = default;
 }
 
 

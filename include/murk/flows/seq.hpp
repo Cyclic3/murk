@@ -173,4 +173,12 @@ namespace murk {
         ret.emplace_back(i);
     return ret;
   }
+
+  namespace seq_ops {
+    template<typename T, typename A>
+    inline std::vector<T>& operator+=(std::vector<T>& a, A b) {
+      a.insert(a.end(), std::begin(b), std::end(b));
+      return a;
+    }
+  }
 }

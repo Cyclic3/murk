@@ -38,12 +38,6 @@ namespace murk::web {
     return n_read;
   }
 
-  data tcp_stream::read(size_t max) {
-    data ret;
-    read(ret, max);
-    return ret;
-  }
-
   tcp_stream::tcp_stream(std::string host_, std::string port_) :
     host{host_}, port{port_}, impl{std::make_unique<impl_t>(host, port)} {}
 }

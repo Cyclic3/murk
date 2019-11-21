@@ -38,7 +38,7 @@ namespace murk {
   inline std::array<uint8_t, sizeof(Int)> to_big_endian(Int i) {
     std::array<uint8_t, sizeof(Int)> ret;
     // It ain't proper C++ without `*reinterpret_cast` ;)
-    *reinterpret_cast<uint8_t*>(ret.data()) = boost::endian::native_to_big(i);
+    *reinterpret_cast<Int*>(ret.data()) = boost::endian::native_to_big(i);
     return ret;
   }
 
@@ -52,6 +52,27 @@ namespace murk {
   /// XXX: does not check size. Will check when we get std::span
   template<typename Int>
   inline Int from_big_endian(nonstd::span<const uint8_t> b) {
-    return boost::endian::big_to_native(*reinterpret_cast<Int*>(b.data()));
+    return boost::endian::big_to_native(*reinterpret_cast<const Int*>(b.data()));
+  }
+
+  template<typename Int>
+  inline std::array<uint8_t, sizeof(Int)> to_little_endian(Int i) {
+    std::array<uint8_t, sizeof(Int)> ret;
+    // It ain't proper C++ without `*reinterpret_cast` ;)
+    *reinterpret_cast<Int*>(ret.data()) = boost::endian::native_to_little(i);
+    return ret;
+  }
+
+  template<typename Int, typename Iter>
+  void to_little_endian(Int i, Iter iter) {
+    Int i_conv = boost::endian::native_to_little(i);
+    const uint8_t* ptr = reinterpret_cast<const uint8_t*>(&i_conv);
+    std::copy(ptr, ptr + sizeof(Int), std::move(iter));
+  }
+
+  /// XXX: does not check size. Will check when we get std::span
+  template<typename Int>
+  inline Int from_little_endian(nonstd::span<const uint8_t> b) {
+    return boost::endian::little_to_native(*reinterpret_cast<const Int*>(b.data()));
   }
 }
