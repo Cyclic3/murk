@@ -17,4 +17,15 @@ namespace murk {
 
     virtual ~byte_stream() = default;
   };
+
+  /// An unbuffered byte datagram protocol
+  struct byte_dgram {
+    virtual size_t write(data_const_ref) = 0;
+    virtual size_t read(data_ref) = 0;
+    virtual data read(size_t max = std::numeric_limits<size_t>::max());
+    /// Indicates if there is likely going to be a message soonish
+    virtual bool avail() = 0;
+    /// Returns 0 if not well defined
+    virtual size_t max_buf() { return 0; }
+  };
 }

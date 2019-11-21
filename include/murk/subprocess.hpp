@@ -1,7 +1,7 @@
 #pragma once
 
 #include "murk/data.hpp"
-#include "murk/byte_stream.hpp"
+#include "murk/xfer.hpp"
 
 #include <cppthings/movable_ptr.hpp>
 

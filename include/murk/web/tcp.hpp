@@ -1,6 +1,6 @@
 #pragma once
 
-#include "murk/byte_stream.hpp"
+#include "murk/xfer.hpp"
 
 #include <memory>
 
