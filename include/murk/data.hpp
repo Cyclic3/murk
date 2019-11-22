@@ -75,4 +75,54 @@ namespace murk {
   inline Int from_little_endian(nonstd::span<const uint8_t> b) {
     return boost::endian::little_to_native(*reinterpret_cast<const Int*>(b.data()));
   }
+
+  namespace byte_ops {
+    std::array<uint8_t, 8> operator""_u64_be(unsigned long long i) {
+      return to_big_endian<uint64_t>(i);
+    }
+
+    std::array<uint8_t, 8> operator""_u64_le(unsigned long long i) {
+      return to_little_endian<uint64_t>(i);
+    }
+
+    std::array<uint8_t, 4> operator""_u32_be(unsigned long long i) {
+      return to_big_endian<uint32_t>(i);
+    }
+
+    std::array<uint8_t, 4> operator""_u32_le(unsigned long long i) {
+      return to_little_endian<uint32_t>(i);
+    }
+
+    std::array<uint8_t, 2> operator""_u16_be(unsigned long long i) {
+      return to_big_endian<uint16_t>(i);
+    }
+
+    std::array<uint8_t, 2> operator""_u16_le(unsigned long long i) {
+      return to_little_endian<uint16_t>(i);
+    }
+
+    std::array<uint8_t, 8> operator""_i64_be(unsigned long long i) {
+      return to_big_endian<int64_t>(i);
+    }
+
+    std::array<uint8_t, 8> operator""_i64_le(unsigned long long i) {
+      return to_little_endian<int64_t>(i);
+    }
+
+    std::array<uint8_t, 4> operator""_i32_be(unsigned long long i) {
+      return to_big_endian<int32_t>(i);
+    }
+
+    std::array<uint8_t, 4> operator""_i32_le(unsigned long long i) {
+      return to_little_endian<int32_t>(i);
+    }
+
+    std::array<uint8_t, 2> operator""_i16_be(unsigned long long i) {
+      return to_big_endian<int16_t>(i);
+    }
+
+    std::array<uint8_t, 2> operator""_i16_le(unsigned long long i) {
+      return to_little_endian<int16_t>(i);
+    }
+  }
 }
