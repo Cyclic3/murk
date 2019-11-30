@@ -1,9 +1,9 @@
+[submodule "gsl-lite"]
+	path = gsl-lite
+	url = git@github.com:martinmoene/gsl-lite.git
 [submodule "fmt"]
 	path = fmt
 	url = git@github.com:fmtlib/fmt.git
 [submodule "cppthings"]
 	path = cppthings
-	url = https://github.com/Cyclic3/cppthings
-[submodule "span-lite"]
-	path = span-lite
-	url = https://github.com/martinmoene/span-lite.git
+	url = https://github.com/Cyclic3/cppthings.git
