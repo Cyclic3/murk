@@ -13,6 +13,20 @@ namespace murk {
   using data_ref = nonstd::span<uint8_t>;
   using data_const_ref = nonstd::span<const uint8_t>;
 
+  namespace detail {
+    template<bool is_const>
+    struct data_any_ref;
+
+    template<>
+    struct data_any_ref<true> { using type = data_const_ref; };
+
+    template<>
+    struct data_any_ref<false> { using type = data_ref; };
+  }
+
+  template<bool is_const>
+  using data_any_ref = typename detail::data_any_ref<is_const>::type;
+
   inline data serialise(std::string_view s) {
     return {s.begin(), s.end()};
   }

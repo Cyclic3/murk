@@ -1,5 +1,6 @@
 #pragma once
 
+#include "murk/span.hpp"
 #include "murk/pwn/capstone_iface.hpp"
 //#include "murk/pwn/operation.hpp"
 #include "murk/data.hpp"
@@ -34,10 +35,10 @@ namespace murk::pwn {
     constexpr size_t offset() const { return begin; }
     constexpr mode_t mode() const { return dat->mode; }
 
-    inline operator gsl::span<::cs_insn>() { return {dat->ptr + begin, size()}; }
-    inline operator gsl::span<const ::cs_insn>() const { return {dat->ptr + begin, size()}; }
-    inline gsl::span<::cs_insn> to_span() { return *this; }
-    inline gsl::span<const ::cs_insn> to_span() const { return *this; }
+    inline operator nonstd::span<::cs_insn>() { return {dat->ptr + begin, size()}; }
+    inline operator nonstd::span<const ::cs_insn>() const { return {dat->ptr + begin, size()}; }
+    inline nonstd::span<::cs_insn> to_span() { return *this; }
+    inline nonstd::span<const ::cs_insn> to_span() const { return *this; }
     inline ::cs_mode get_mode() const { return dat->mode; }
     inline cs_insn& operator[](size_t i) { return *(dat->ptr + begin + i); }
     inline const cs_insn& operator[](size_t i) const { return *(dat->ptr + begin + i); }

@@ -6,6 +6,8 @@
 #include <cstring>
 #include <set>
 
+#include <fmt/format.h>
+
 namespace murk::pwn::rop {
   bool effect_acceptable(::cs_insn i) {
     static std::set<std::string_view> acceptables {
@@ -23,6 +25,7 @@ namespace murk::pwn::rop {
 
   std::vector<instructions> get_all_gadgets(const instructions& ins, uint64_t max_effects) {
     std::unordered_set<instructions> ret;
+    fmt::print("{}\n", ins.size());
 
     for (size_t i = 0; i < ins.size(); ++i) {
       if (is_flow_redirect(ins[i])) {
@@ -61,7 +64,7 @@ namespace murk::pwn::rop {
 //    }
 //  }
 
-  z3::model derive_model(gsl::span<const instructions> gadgets) {
+  z3::model derive_model(nonstd::span<const instructions> gadgets) {
     z3::context ctx;
 
     auto int_arr = ctx.array_sort(ctx.int_sort(), ctx.int_sort());

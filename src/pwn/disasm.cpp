@@ -1,7 +1,5 @@
 #include "murk/pwn/disasm.hpp"
 
-#include <gsl/gsl-lite.hpp>
-
 #include <capstone/capstone.h>
 
 namespace murk::pwn {

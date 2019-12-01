@@ -22,6 +22,8 @@ find_package(TBB REQUIRED)
 find_package(Botan REQUIRED)
 find_package(Doxygen REQUIRED)
 find_package(Capstone REQUIRED)
+find_package(Z3 REQUIRED)
+find_package(Elf REQUIRED)
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/cppthings)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/span-lite)
@@ -44,6 +46,7 @@ target_link_libraries(murk
   Botan::botan
   CppThings::cppthings
   Capstone::capstone
+  Elf::elf
   PRIVATE
   Z3::z3
 PRIVATE # Libraries only needed to build this library

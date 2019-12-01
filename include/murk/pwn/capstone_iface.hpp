@@ -1,14 +1,14 @@
 #pragma once
 
-#include <gsl/gsl-lite.hpp>
-
 #include <capstone/capstone.h>
+
+#include <cppthings/defer.hpp>
 
 namespace murk::pwn {
   [[noreturn]]
   inline void throw_cs_err(::cs_err err) {
     const char* str = ::cs_strerror(err);
-    auto str_f = gsl::finally([&](){delete(str);});
+    auto str_f = cppthings::defer([&](){delete(str);});
     throw std::runtime_error(str);
   }
 
