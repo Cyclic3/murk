@@ -1,6 +1,6 @@
 [submodule "fmt"]
 	path = fmt
-	url = git@github.com:fmtlib/fmt.git
+	url = https://github.com/fmtlib/fmt.git
 [submodule "cppthings"]
 	path = cppthings
 	url = https://github.com/Cyclic3/cppthings
