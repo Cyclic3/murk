@@ -4,11 +4,11 @@ jobs:
     language: cpp
     before_install:
     - echo en_GB.UTF-8 UTF-8 | sudo tee /etc/locale.gen
-    - echo deb http://gb.archive.ubuntu.com/ubuntu/ disco main | sudo tee /etc/apt/sources.list.d/disco.list
-    - "printf 'Package: *\nPin: release a=disco\nPin-Priority: -10\n' | sudo tee /etc/apt/preferences"
+    - echo deb http://gb.archive.ubuntu.com/ubuntu/ eoan main | sudo tee /etc/apt/sources.list.d/disco.list
+    - "printf 'Package: *\nPin: release a=eoan\nPin-Priority: -10\n' | sudo tee /etc/apt/preferences"
     - sudo apt-get -q update
     - >
-      sudo apt-get -y --no-install-recommends -t disco install 
+      sudo apt-get -y --no-install-recommends -t eoan install 
       libboost-dev libboost-system-dev g++-9 libstdc++-9-dev
     - >
       sudo apt-get -y --no-install-recommends install 
