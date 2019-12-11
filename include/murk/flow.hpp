@@ -115,7 +115,13 @@ namespace murk {
   }
 
   template<typename F>
-  inline void interactive(F f, std::string prompt_name = "") {
+  inline void prompt(F f, std::string_view prompt_name = "") {
+    std::string line;
+    while (((void)(std::cout << prompt_name << "> "), std::getline(std::cin, line)) && f(line));
+  }
+
+  template<typename F>
+  inline void interactive(F f, std::string_view prompt_name = "") {
     std::string line;
     while (((void)(std::cout << prompt_name << "> "), std::getline(std::cin, line)) && !line.empty())
       std::cout << prompt_name << "< " << f(line) << std::endl;

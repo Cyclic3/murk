@@ -3,11 +3,11 @@
 #include "murk/flow.hpp"
 #include "murk/data.hpp"
 
-#include <nonstd/span.hpp>
-
 #include <map>
 
-#include <limits.h>
+#ifndef CHAR_BIT
+#define CHAR_BIT 8
+#endif
 
 namespace murk::crypto {
   using token_t = size_t;

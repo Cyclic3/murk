@@ -1,4 +1,0 @@
-#include <filesystem>
-
-int main() {
-}

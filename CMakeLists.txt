@@ -7,14 +7,12 @@ if(CCACHE_FOUND)
   set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
 endif()
 
-
 set(CMAKE_CXX_STANDARD 20)
 
 project(murk)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 include(cotire)
-
 find_package(Boost REQUIRED system)
 find_package(OpenSSL REQUIRED)
 find_package(Threads REQUIRED)
@@ -31,6 +29,8 @@ file(GLOB_RECURSE murk_source ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
 add_library(murk ${murk_source})
 cotire(murk)
 
+target_sources(murk INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src/all_mods.cpp)
+
 target_link_libraries(murk
   PUBLIC
   Boost::boost
@@ -38,7 +38,7 @@ target_link_libraries(murk
   OpenSSL::SSL
   nonstd::span-lite
   Threads::Threads
-  fmt::fmt-header-only
+  fmt::fmt
   TBB::tbb
   Botan::botan
   CppThings::cppthings
@@ -80,3 +80,11 @@ foreach(foo ${foo_source})
 
   target_link_libraries(${foo_name} murk)
 endforeach()
+
+file(GLOB_RECURSE automurk_source automurk/*.cpp)
+add_executable(automurk ${automurk_source})
+target_link_libraries(automurk murk fmt::fmt)
+
+file(GLOB_RECURSE autostage_source autostage/*.cpp)
+add_executable(autostage ${autostage_source})
+target_link_libraries(autostage)
