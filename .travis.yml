@@ -9,7 +9,7 @@ jobs:
     - sudo apt-get -q update
     - >
       sudo apt-get -y --no-install-recommends -t disco install 
-      libboost-dev libboost-system-dev gcc-9 libstdc++-9-dev
+      libboost-dev libboost-system-dev g++-9 libstdc++-9-dev
     - >
       sudo apt-get -y --no-install-recommends install 
       cmake ninja-build libtbb-dev libssl-dev libbotan-2-dev doxygen
