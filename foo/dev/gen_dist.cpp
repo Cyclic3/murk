@@ -10,19 +10,18 @@ using namespace murk::flow_ops;
 
 int main() {
   std::string twist =
-      murk::in<std::string>()
-   >> murk::web::http::navigate
-   >> murk::web::http::get
-   << "https://www.gutenberg.org/cache/epub/730/pg730.txt";
+      murk::in<std::string>(murk::web::http::navigate)
+   -> then(murk::web::http::get)
+   -> call(murk::web::uri{"https://www.gutenberg.org/cache/epub/730/pg730.txt"});
 
   int precision = std::numeric_limits<murk::crypto::freq_t>::digits10;
 
   {
     auto f =
-        murk::in<std::string>()
-        >> murk::cast_span<char, size_t>
-        >> murk::count<size_t>
-        >> murk::crypto::normalise_freq;
+        murk::in<std::string>(murk::cast_span<char, size_t>)
+        -> then(murk::count<size_t>)
+        -> then(murk::crypto::normalise_freq)
+        -> done();
 
     auto m = f(twist);
     // Because these are more pain than they're worth

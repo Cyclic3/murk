@@ -47,11 +47,6 @@ namespace murk {
     }
   };
 
-  template<typename In>
-  inline flow_t<In> in() {
-    return [](In i) -> In { return i; };
-  }
-
   template<typename From, typename To>
   inline To cast(From f) {
     return static_cast<To>(f);
@@ -130,14 +125,36 @@ namespace murk {
   template<typename ...Args>
   using args = std::tuple<Args...>;
 
-  namespace flow_ops {
-    template<typename InFunc, typename OutFunc>
-    inline auto operator>>(InFunc in, OutFunc out) {
-      return [in{std::move(in)}, out{std::move(out)}] (auto... args) {
-        return out(in(args...));
+  template<typename T>
+  class flow : std::enable_shared_from_this<flow<T>> {
+  private:
+    T func;
+  public:
+    template<typename U>
+    inline auto then(U next) const {
+      auto l = [ref{this->shared_from_this()}, next{std::move(next)}](auto... args) {
+        return next(ref->call(std::forward<decltype(args)>(args)...));
       };
+      return std::make_shared<flow<decltype(l)>>(l);
+    }
+    inline auto done() const {
+      return [ref{this->shared_from_this()}](auto... args){ return ref->call(std::forward<decltype(args)>(args)...); };
+    }
+    template<typename... Args>
+    inline auto call(Args... args) const {
+      return func(std::forward<Args>(args)...);
     }
 
+  public:
+    inline flow(T t) : func{std::forward<T>(t)} {}
+  };
+
+  template<typename In, typename T>
+  inline auto in(T t) {
+    return std::make_shared<flow<T>>(std::forward<T>(t));
+  }
+
+  namespace flow_ops {
     template<typename Func, typename P>
     inline auto operator<(Func f, P p) {
       return [f{std::move(f)}, p{std::move(p)}](auto... args) {
@@ -150,11 +167,6 @@ namespace murk {
       return [f{std::move(f)}, p{std::move(p)}](auto... args) {
         return f(std::forward<decltype(args)>(args)..., p);
       };
-    }
-
-    template<typename InFunc, typename Arg>
-    inline auto operator<<(InFunc f, Arg arg) {
-      return f(std::forward<Arg>(arg));
     }
   }
 }

@@ -33,7 +33,7 @@ namespace murk {
   }
 
   template<typename Int>
-  std::array<uint8_t, sizeof(Int)> to_big_endian(Int i);
+  extern std::array<uint8_t, sizeof(Int)> to_big_endian(Int i);
 
   template<typename Int, typename Iter>
   void to_big_endian(Int i, Iter iter) {
@@ -46,7 +46,7 @@ namespace murk {
   Int from_big_endian(nonstd::span<const uint8_t> b);
 
   template<typename Int>
-  std::array<uint8_t, sizeof(Int)> to_little_endian(Int i);
+  extern std::array<uint8_t, sizeof(Int)> to_little_endian(Int i);
 
   template<typename Int, typename Iter>
   void to_little_endian(Int i, Iter iter) {

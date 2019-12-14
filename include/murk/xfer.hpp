@@ -30,4 +30,9 @@ namespace murk {
 
     virtual ~byte_dgram() = default;
   };
+
+  inline byte_stream& operator<<(byte_stream& bs, data_const_ref b) {
+    bs.write(b);
+    return bs;
+  }
 }

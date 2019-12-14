@@ -11,8 +11,9 @@ namespace murk::random {
 
   template<typename Iter>
   inline Iter rand_from(Iter begin, Iter end) {
-    std::uniform_int_distribution<size_t> dist (0, std::distance(end, begin));
-    std::advance(begin, dist(rng));
+    std::uniform_int_distribution<size_t> dist (0, std::distance(begin, end));
+    auto n = dist(rng);
+    std::advance(begin, n);
     return begin;
   }
 

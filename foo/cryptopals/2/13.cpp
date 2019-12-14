@@ -46,23 +46,23 @@ murk::data get_cookie(std::string email) {
 }
 
 static auto is_admin = murk::threaded_flow_t<murk::data_const_ref, bool>::create(
-    murk::in<murk::data_const_ref>()
-     >> decrypt
-     >> murk::deserialise<std::string>
-     >> (murk::log<std::string> < "{}"s)
-     >> murk::web::form_url_decode
-     >> [](const murk::web::form_t& a) -> bool {
+    murk::in<murk::data_const_ref>(decrypt)
+     -> then(murk::deserialise<std::string>)
+     -> then(murk::log<std::string> < "{}"s)
+     -> then(murk::web::form_url_decode)
+     -> then([](const murk::web::form_t& a) -> bool {
           if (auto iter = a.find("role"); iter != a.end())
             return iter->second == "admin";
           else return false;
-        });
+        })
+     -> done());
 
 int main() {
   murk::flow_t<murk::data_const_ref, murk::data> insert_oracle =
-      murk::in<murk::data_const_ref>()
-   >> murk::deserialise<std::string>
-   >> (murk::log<std::string> < "Inserting: {}"s)
-   >> get_cookie;
+      murk::in<murk::data_const_ref>(murk::deserialise<std::string>)
+   -> then(murk::log<std::string> < "Inserting: {}"s)
+   -> then(get_cookie)
+   -> done();
 
   auto spam = murk::crypto::ecb_determine_spam(insert_oracle, 16);
   auto admin_tail = murk::serialise("admin");

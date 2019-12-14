@@ -5,6 +5,21 @@
 #include <regex>
 
 namespace murk {
+  inline std::string bounded(std::string_view s, std::string_view bound, std::string_view end_bound) {
+    auto begin = s.find(bound);
+    if (begin == s.npos)
+      throw std::invalid_argument("begin bound not found");
+    begin += bound.size();
+    auto end = s.find(end_bound, begin);
+    if (end == s.npos)
+      throw std::invalid_argument("end bound not found");
+    return std::string(s.begin() + begin, s.begin() + end);
+  }
+
+  inline std::string bounded(std::string_view s, std::string_view bound) {
+    return bounded(s, bound, bound);
+  }
+
   inline std::string extract(std::regex regex, std::string s) {
     std::smatch matches;
     if (!std::regex_search(s, matches, regex))
@@ -63,7 +78,7 @@ namespace murk {
         if (::isprint(c))
           return fmt::format("{}", c);
         else
-          return fmt::format("\\x{:x}", static_cast<unsigned char>(c));
+          return fmt::format("\\x{:02x}", static_cast<unsigned char>(c));
     }
   }
 

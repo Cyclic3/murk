@@ -6,12 +6,12 @@ namespace murk::crypto {
       using namespace flow_ops;
 
       auto score_key =
-          murk::in<uint8_t>()
-       >> (crypt < ctext)
-       >> murk::cast_span<uint8_t, murk::crypto::token_t>
-       >> murk::count<murk::crypto::token_t>
-       >> murk::crypto::normalise_freq
-       >> (murk::crypto::score_dist_match < (murk::crypto::dist_conv << murk::crypto::twist_char_dist));
+          murk::in<uint8_t>(crypt < ctext)
+       -> then(murk::cast_span<uint8_t, murk::crypto::token_t>)
+       -> then(murk::count<murk::crypto::token_t>)
+       -> then(murk::crypto::normalise_freq)
+       -> then(murk::crypto::score_dist_match < (murk::crypto::dist_conv(murk::crypto::twist_char_dist)))
+       -> done();
 
       uint8_t best_key = 0;
       murk::crypto::freq_t best_score = std::numeric_limits<murk::crypto::freq_t>::infinity();
@@ -73,12 +73,11 @@ namespace murk::crypto {
       using namespace flow_ops;
 
       auto freqs =
-          murk::in<decltype(ctext)>()
-       >> (murk::filter<uint8_t, decltype(ctext)> > filter)
-       >> murk::cast_span<uint8_t, murk::crypto::token_t>
-       >> murk::count<murk::crypto::token_t>
-       >> murk::crypto::normalise_freq
-       << ctext;
+          murk::in<decltype(ctext)>(murk::filter<uint8_t, decltype(ctext)> > filter)
+       -> then(murk::cast_span<uint8_t, murk::crypto::token_t>)
+       -> then(murk::count<murk::crypto::token_t>)
+       -> then(murk::crypto::normalise_freq)
+       -> call(ctext);
 
       auto in = sort_freq(freqs);
       auto out = sort_freq(expected);
