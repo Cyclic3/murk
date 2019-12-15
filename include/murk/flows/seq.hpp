@@ -1,8 +1,7 @@
 #pragma once
 
 #include "murk/flow.hpp"
-
-#include <nonstd/span.hpp>
+#include "murk/span.hpp"
 
 #include <map>
 

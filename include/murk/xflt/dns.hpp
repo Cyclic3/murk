@@ -1,10 +1,11 @@
 #pragma once
 
+#include <murk/span.hpp>
+
 #include <boost/asio/ip/udp.hpp>
 
 #include <boost/signals2.hpp>
 
-#include <nonstd/span.hpp>
 
 namespace murk::xflt {
   class dns {

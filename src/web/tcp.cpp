@@ -20,7 +20,11 @@ namespace murk::web {
   }
 
   size_t tcp_stream::write(data_const_ref b) {
+#ifdef __linux__
+    return ::write(impl->s.native_handle(), b.data(), b.size());
+#else
     return impl->s.send(boost::asio::buffer(b.data(), b.size()));
+#endif
   }
 
   size_t tcp_stream::read(data_ref b) {
@@ -38,6 +42,16 @@ namespace murk::web {
     return n_read;
   }
 
-  tcp_stream::tcp_stream(std::string host_, std::string port_) :
-    host{host_}, port{port_}, impl{std::make_unique<impl_t>(host, port)} {}
+  tcp_stream::tcp_stream(std::string host_, std::string port_, bool nodelay) :
+    host{host_}, port{port_}, impl{std::make_unique<impl_t>(host, port)} {
+    if (nodelay) {
+      impl->s.set_option(boost::asio::ip::tcp::no_delay(true));
+#ifdef __linux__
+          int fd = impl->s.native_handle();
+          int val = IP_PMTUDISC_DO;
+          int result = ::setsockopt(fd, IPPROTO_IP, IP_MTU_DISCOVER,
+                                    &val, sizeof(val));
+#endif
+    }
+  }
 }

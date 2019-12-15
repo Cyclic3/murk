@@ -86,5 +86,7 @@ namespace murk {
   public:
     inline io_bs(subprocess* sp) : in{&sp->in()}, out{&sp->out()} {}
   };
+
+  inline subprocess::io_bs subprocess::get_byte_stream() { return {this}; }
 }
 

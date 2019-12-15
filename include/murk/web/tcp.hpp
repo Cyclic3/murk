@@ -30,6 +30,6 @@ namespace murk::web {
     inline data operator()() { return read(); }
 
   public:
-    tcp_stream(std::string host, std::string port);
+    tcp_stream(std::string host, std::string port, bool nodelay = false);
   };
 }

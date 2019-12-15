@@ -106,5 +106,10 @@ namespace murk {
     inline std::array<uint8_t, 2> operator""_i16_le(unsigned long long i) {
       return to_little_endian<int16_t>(i);
     }
+
+    inline std::ostream& operator<<(std::ostream& is, data_const_ref b) {
+      is.write(reinterpret_cast<const char*>(b.data()), b.size());
+      return is;
+    }
   }
 }

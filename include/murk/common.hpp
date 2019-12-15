@@ -5,6 +5,7 @@
 #include <murk/flows/seq.hpp>
 
 #include <chrono>
+#include <thread>
 
 using namespace murk::flow_ops;
 using namespace murk::seq_ops;
