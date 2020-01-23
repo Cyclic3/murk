@@ -9,6 +9,7 @@
 #include <botan/block_cipher.h>
 
 #include <cppthings/safe_iter.hpp>
+#include <cppthings/number.hpp>
 
 #include <atomic>
 #include <map>
@@ -37,7 +38,7 @@ namespace murk::crypto {
     std::vector<std::thread> threads(conc);
 
     // First, we create the search table of keys
-    for (unsigned int thread_id = 0; thread_id < conc; ++thread_id) {
+    for (decltype(conc) thread_id = 0; thread_id < conc; ++thread_id) {
       threads[thread_id] = std::thread{[&, thread_id]() -> void {
         auto iter = inner_begin;
         // Check that we don't have more threads than ids
@@ -45,29 +46,31 @@ namespace murk::crypto {
           return;
         do
           enc_store_inter_res(*iter);
-        while(cppthings::safe_iter::safe_forward_small(iter, inner_end, conc));
+        while (cppthings::safe_iter::safe_forward_small(iter, inner_end, conc));
       }};
     }
     // Wait for the results
     for (auto& i : threads)
       i.join();
 
-    std::atomic<bool> stop = false;
+    // Look at me, I'm being evil
+    std::atomic_flag first;
+    /*std::atomic<*/bool/*>*/ stop = false;
     std::optional<std::pair<OuterKey, InnerKey>> ret;
 
+//    auto fast_conc_iter_diff = static_cast<typename std::iterator_traits<OuterKeyIter>::difference_type>(conc);
+
     // Now brute force the outer key
-    for (unsigned int thread_id = 0; thread_id < conc; ++thread_id) {
+    for (decltype(conc) thread_id = 0; thread_id < conc; ++thread_id) {
       threads[thread_id] = std::thread{[&, thread_id]() {
         auto iter = outer_begin;
         // Check that we don't have more threads than ids
         if (!cppthings::safe_iter::safe_forward_small(iter, outer_end, thread_id))
           return;
         do {
-          if (auto res = dec_check_inter_res(*iter)) {
-            // Stop race conditions
-            if (!stop.exchange(true))
-              ret = res;
-            return;
+          if (auto res = dec_check_inter_res(*iter); res && first.test_and_set()) {
+            stop = true;
+            ret = std::move(res);
           }
         }
         while(!stop && cppthings::safe_iter::safe_forward_small(iter, outer_end, conc));
@@ -78,7 +81,6 @@ namespace murk::crypto {
     for (auto& i : threads)
       i.join();
 
-    [[unlikely]]
     if (!ret)
       throw std::logic_error("Meet in the middle attack could not find key. Check the keyspace and functions");
 

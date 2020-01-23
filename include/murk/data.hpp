@@ -16,7 +16,7 @@ namespace murk {
   }
 
   inline data_const_ref get_data_const_ref(std::string_view s) {
-    data_const_ref ret{reinterpret_cast<const uint8_t*>(s.data()), static_cast<data_const_ref::index_type>(s.size())};
+    data_const_ref ret{reinterpret_cast<const uint8_t*>(s.data()), static_cast<data_const_ref::size_type>(s.size())};
     return ret;
   }
 

@@ -91,6 +91,26 @@ namespace murk::mod {
   }
 
   template<typename F>
+  inline std::shared_ptr<module> adapt_default_func(F f) {
+    class mod_int : public module {
+    private:
+      decltype(f) flow;
+    public:
+      std::optional<std::string> act(std::string arg) override {
+        if (arg.empty())
+          flow();
+        else
+          flow(arg);
+        return std::nullopt;
+      }
+    public:
+      mod_int(decltype(f) flow_) : flow{std::move(flow_)} {}
+    };
+
+    return std::make_shared<mod_int>(std::move(f));
+  }
+
+  template<typename F>
   inline std::shared_ptr<module> adapt_default_func_print(F f) {
     class mod_int : public module {
     private:
@@ -101,6 +121,23 @@ namespace murk::mod {
           return flow();
         else
           return flow(arg);
+      }
+    public:
+      mod_int(decltype(f) flow_) : flow{std::move(flow_)} {}
+    };
+
+    return std::make_shared<mod_int>(std::move(f));
+  }
+
+  template<typename F>
+  inline std::shared_ptr<module> adapt_simple_func(F f) {
+    class mod_int : public module {
+    private:
+      decltype(f) flow;
+    public:
+      std::optional<std::string> act(std::string arg) override {
+        flow(arg);
+        return std::nullopt;
       }
     public:
       mod_int(decltype(f) flow_) : flow{std::move(flow_)} {}

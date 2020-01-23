@@ -8,6 +8,8 @@
 #include "murk/filt/zealous.hpp"
 
 #include "murk/priv/docker.hpp"
+#include "murk/priv/sbin.hpp"
+#include "murk/priv/sbin.hpp"
 
 #include "murk/web/uri.hpp"
 #include "murk/web/ssti.hpp"
@@ -24,6 +26,7 @@ namespace murk {
 
   namespace priv {
     MURK_MOD_REGISTER(mod::adapt_default_func_print([](auto... args){return docker(args...);}), {"priv", "docker"});
+    MURK_MOD_REGISTER(mod::adapt_default_func_print([](auto... args){return nmap(args...);}), {"priv", "nmap"});
   }
 
   namespace filt {

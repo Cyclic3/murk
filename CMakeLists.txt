@@ -66,7 +66,6 @@ install(TARGETS murk
 )
 set_target_properties(murk PROPERTIES EXPORT_NAME Murk)
 
-
 file(GLOB_RECURSE foo_source foo/*.cpp)
 foreach(foo ${foo_source})
   file(RELATIVE_PATH foo_rel ${CMAKE_SOURCE_DIR}/foo ${foo})
@@ -84,7 +83,3 @@ endforeach()
 file(GLOB_RECURSE automurk_source automurk/*.cpp)
 add_executable(automurk ${automurk_source})
 target_link_libraries(automurk murk fmt::fmt)
-
-file(GLOB_RECURSE autostage_source autostage/*.cpp)
-add_executable(autostage ${autostage_source})
-target_link_libraries(autostage)

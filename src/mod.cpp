@@ -2,6 +2,8 @@
 
 #include "murk/flow.hpp"
 
+#include <sstream>
+
 namespace murk::mod {
   struct base_shell : shell {
     std::string_view get_prompt() const noexcept override { return "murk"; }
@@ -76,14 +78,19 @@ namespace murk::mod {
 
   shell::shell() {
     mgr.register_modules(adapt_default_func_print([this](auto... x) -> std::string {
-      if constexpr (sizeof...(x) == 0)
-        for (const auto& i : mgr)
-          fmt::print("{}\n", i.first);
+      if constexpr (sizeof...(x) == 0) {
+        std::string ret;
+        for (const auto& i : mgr) {
+          ret += i.first;
+          ret += '\n';
+        }
+        ret.pop_back();
+        return ret;
+      }
       else {
+        return {};
       // TODO
       }
-
-      return {};
     }), "help", "?");
   }
 
