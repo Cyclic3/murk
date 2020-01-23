@@ -78,6 +78,15 @@ int main() {
     if (new_hash != ret.hash)
       abort();
   }
+  
+  {
+    murk::data hash = "f59ac0828b9a32293b348e398a0efd342b1e4377a687f3a9055ee2871dff35e4"_hex;
+    
+    auto ret = murk::crypto::extend<murk::crypto::LengthExtendable::SHA2_256>(hash, 4, murk::serialise("hacked"));
+
+    std::cout << murk::hex_encode(ret.appended) << std::endl;
+    std::cout << murk::hex_encode(ret.hash) << std::endl;
+  }
 
   return 0;
 }
