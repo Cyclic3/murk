@@ -2,6 +2,7 @@
 
 #include "murk/span.hpp"
 
+#include <bit>
 #include <vector>
 
 #include <cstdint>
@@ -32,6 +33,39 @@ namespace murk {
     return {reinterpret_cast<const char*>(b.data()), static_cast<std::string_view::size_type>(b.size())};
   }
 
+  template<typename Int>
+  extern Int flip_endian(Int i);
+
+  template<typename Int>
+  inline Int h2be(Int i) {
+    if constexpr (std::endian::native != std::endian::big)
+      return flip_endian(i);
+    else
+      return i;
+  }
+  template<typename Int>
+  inline Int h2le(Int i) {
+    if constexpr (std::endian::native != std::endian::little)
+      return flip_endian(i);
+    else
+      return i;
+  }
+  template<typename Int>
+  inline Int b2he(Int i) {
+    if constexpr (std::endian::native != std::endian::big)
+      return flip_endian(i);
+    else
+      return i;
+  }
+  template<typename Int>
+  inline Int l2he(Int i) {
+    if constexpr (std::endian::native != std::endian::little)
+      return flip_endian(i);
+    else
+      return i;
+  }
+
+  // TODO: optimise using .2.e
   template<typename Int>
   extern std::array<uint8_t, sizeof(Int)> to_big_endian(Int i);
 

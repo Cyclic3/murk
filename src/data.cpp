@@ -3,6 +3,11 @@
 #include <boost/endian/conversion.hpp>
 namespace murk {
   template<typename Int>
+  Int flip_endian(Int i) {
+    return boost::endian::endian_reverse(i);
+  }
+
+  template<typename Int>
   std::array<uint8_t, sizeof(Int)> to_big_endian(Int i) {
     std::array<uint8_t, sizeof(Int)> ret;
     // It ain't proper C++ without `*reinterpret_cast` ;)
@@ -29,6 +34,16 @@ namespace murk {
   Int from_little_endian(nonstd::span<const uint8_t> b) {
     return boost::endian::little_to_native(*reinterpret_cast<const Int*>(b.data()));
   }
+  template uint8_t flip_endian(uint8_t);
+  template  int8_t flip_endian( int8_t);
+  template uint16_t flip_endian(uint16_t);
+  template  int16_t flip_endian( int16_t);
+  template uint32_t flip_endian(uint32_t);
+  template  int32_t flip_endian( int32_t);
+  template uint64_t flip_endian(uint64_t);
+  template  int64_t flip_endian( int64_t);
+
+
 
   template                            uint8_t      from_big_endian<uint8_t>(nonstd::span<const uint8_t> i);
   template                            uint8_t   from_little_endian<uint8_t>(nonstd::span<const uint8_t> i);

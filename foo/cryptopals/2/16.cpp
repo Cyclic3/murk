@@ -50,7 +50,7 @@ int main() {
   auto res = oracle(buf);
 
   murk::data msg = ";admin=true;"_b;
-  murk::xor_bytes_inplace(murk::data_ref{res}.subspan(spam.second, static_cast<murk::data_const_ref::index_type>(msg.size())), msg);
+  murk::xor_bytes_inplace(murk::data_ref{res}.subspan(spam.second, msg.size()), msg);
   if (!validator(res))
     throw std::logic_error("Hack failed");
 }

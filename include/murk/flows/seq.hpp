@@ -175,8 +175,14 @@ namespace murk {
 
   namespace seq_ops {
     template<typename T, typename A>
-    inline std::vector<T>& operator+=(std::vector<T>& a, A b) {
+    inline std::vector<T>& operator+=(std::vector<T>& a, A&& b) {
       a.insert(a.end(), std::begin(b), std::end(b));
+      return a;
+    }
+
+    template<typename T, typename A>
+    inline std::vector<T> operator+(std::vector<T> a, A&& b) {
+      a += b;
       return a;
     }
   }
