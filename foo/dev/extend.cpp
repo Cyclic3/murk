@@ -33,6 +33,30 @@ int main() {
 
   {
     murk::data msg = murk::serialise("test\n");
+    murk::data hash(160 / 8);
+
+    SHA_CTX ctx;
+    SHA1_Init(&ctx);
+    SHA1_Update(&ctx, msg.data(), msg.size());
+    SHA1_Final(hash.data(), &ctx);
+
+    auto new_data = murk::serialise("evil");
+
+    auto ret = murk::crypto::extend<murk::crypto::LengthExtendable::SHA1>(hash, msg.size(), new_data);
+
+    auto new_msg = msg + ret.appended;
+
+    murk::data new_hash(160 / 8);
+    SHA1_Init(&ctx);
+    SHA1_Update(&ctx, new_msg.data(), new_msg.size());
+    SHA1_Final(new_hash.data(), &ctx);
+
+    if (new_hash != ret.hash)
+      abort();
+  }
+
+  {
+    murk::data msg = murk::serialise("test\n");
     murk::data hash(256 / 8);
 
     SHA256_CTX ctx;

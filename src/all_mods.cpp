@@ -14,6 +14,8 @@
 #include "murk/web/uri.hpp"
 #include "murk/web/ssti.hpp"
 
+#include "murk/crypto/hash.hpp"
+
 namespace murk {
   MURK_MOD_REGISTER(mod::adapt_simple_func_print([](auto... args) {
     system(murk::mod::module::root().act(args...).value().c_str());
