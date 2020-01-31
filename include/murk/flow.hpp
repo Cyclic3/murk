@@ -154,20 +154,22 @@ namespace murk {
     return std::make_shared<flow<T>>(std::forward<T>(t));
   }
 
-  namespace flow_ops {
-    template<typename Func, typename P>
-    inline auto operator<(Func f, P p) {
-      return [f{std::move(f)}, p{std::move(p)}](auto... args) {
-        return f(p, std::forward<decltype(args)>(args)...);
-      };
-    }
+  inline constexpr auto flow_input = std::placeholders::_1;
 
-    template<typename Func, typename P>
-    inline auto operator>(Func f, P p) {
-      return [f{std::move(f)}, p{std::move(p)}](auto... args) {
-        return f(std::forward<decltype(args)>(args)..., p);
-      };
-    }
+  namespace flow_ops {
+//    template<typename Func, typename P>
+//    inline auto operator<(Func f, P p) {
+//      return [f{std::move(f)}, p{std::move(p)}](auto... args) {
+//        return f(p, std::forward<decltype(args)>(args)...);
+//      };
+//    }
+
+//    template<typename Func, typename P>
+//    inline auto operator>(Func f, P p) {
+//      return [f{std::move(f)}, p{std::move(p)}](auto... args) {
+//        return f(std::forward<decltype(args)>(args)..., p);
+//      };
+//    }
   }
 }
 

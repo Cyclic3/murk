@@ -1,5 +1,3 @@
-#pragma once
-
 #include "murk/crypto/hash.hpp"
 
 #include <cppthings/iota_iter.hpp>
