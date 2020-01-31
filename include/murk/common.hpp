@@ -7,6 +7,7 @@
 #include <chrono>
 #include <thread>
 
+using namespace murk::flow_ops;
 using namespace murk::seq_ops;
 using namespace murk::lit_ops;
 using namespace murk::byte_ops;

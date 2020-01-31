@@ -154,9 +154,8 @@ namespace murk {
     return std::make_shared<flow<T>>(std::forward<T>(t));
   }
 
-  inline constexpr auto flow_input = std::placeholders::_1;
-
   namespace flow_ops {
+    inline constexpr auto flow_input = std::placeholders::_1;
 //    template<typename Func, typename P>
 //    inline auto operator<(Func f, P p) {
 //      return [f{std::move(f)}, p{std::move(p)}](auto... args) {
@@ -171,6 +170,8 @@ namespace murk {
 //      };
 //    }
   }
+
+  using namespace flow_ops;
 }
 
 #define MURK_INVOKE(OBJ, FUNCTION) \

@@ -48,7 +48,7 @@ murk::data get_cookie(std::string email) {
 static auto is_admin = murk::threaded_flow_t<murk::data_const_ref, bool>::create(
     murk::in<murk::data_const_ref>(decrypt)
      -> then(murk::deserialise<std::string>)
-     -> then(murk::log<std::string> < "{}"s)
+     -> then(std::bind(murk::log<std::string>, "{}", flow_input))
      -> then(murk::web::form_url_decode)
      -> then([](const murk::web::form_t& a) -> bool {
           if (auto iter = a.find("role"); iter != a.end())
@@ -60,7 +60,7 @@ static auto is_admin = murk::threaded_flow_t<murk::data_const_ref, bool>::create
 int main() {
   murk::flow_t<murk::data_const_ref, murk::data> insert_oracle =
       murk::in<murk::data_const_ref>(murk::deserialise<std::string>)
-   -> then(murk::log<std::string> < "Inserting: {}"s)
+   -> then(std::bind(murk::log<std::string>, "Inserting: {}"s, flow_input))
    -> then(get_cookie)
    -> done();
 

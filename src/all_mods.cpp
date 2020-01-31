@@ -2,7 +2,12 @@
 #define MURK_MOD_MAKE_NAME(A, B, C) MURK_MOD_MAKE_NAME_INTERNAL(A,B,C)
 
 #define MURK_MOD_REGISTER(MOD, ...) \
-  void __attribute__((constructor)) MURK_MOD_MAKE_NAME(_,__COUNTER__,_mod_register)() { ::murk::mod::manager::register_path(MOD, __VA_ARGS__); }
+  void __attribute__((constructor)) MURK_MOD_MAKE_NAME(_,__COUNTER__,_mod_register)() { \
+    static bool load_once = false; \
+    if (load_once) return; \
+    load_once = true; \
+    ::murk::mod::manager::register_path(MOD, __VA_ARGS__); \
+}
 
 #include "murk/mod.hpp"
 #include "murk/filt/zealous.hpp"

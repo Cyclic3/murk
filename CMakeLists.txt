@@ -20,6 +20,9 @@ find_package(Threads REQUIRED)
 find_package(TBB REQUIRED)
 find_package(Botan REQUIRED)
 find_package(Doxygen REQUIRED)
+find_package(SWIG REQUIRED)
+find_package(Python3 REQUIRED COMPONENTS Development)
+include(${SWIG_USE_FILE})
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/cppthings)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/span-lite)
@@ -28,7 +31,6 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/fmt)
 file(GLOB_RECURSE murk_source ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
 
 add_library(murk SHARED ${murk_source})
-cotire(murk)
 
 target_sources(murk INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src/all_mods.cpp)
 
@@ -84,3 +86,14 @@ endforeach()
 file(GLOB_RECURSE automurk_source automurk/*.cpp)
 add_executable(automurk ${automurk_source})
 target_link_libraries(automurk murk fmt::fmt)
+
+set(PYTHON_SWIG ${CMAKE_CURRENT_SOURCE_DIR}/swig/python.i)
+set_property(SOURCE ${PYTHON_SWIG} PROPERTY CPLUSPLUS ON)
+set_property(SOURCE ${PYTHON_SWIG} PROPERTY USE_TARGET_INCLUDE_DIRECTORIES TRUE)
+swig_add_library(murkpy
+  TYPE SHARED
+  LANGUAGE python
+  SOURCES ${PYTHON_SWIG})
+swig_link_libraries(murkpy murk Python3::Python)
+
+cotire(murk)

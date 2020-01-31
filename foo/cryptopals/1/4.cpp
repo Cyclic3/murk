@@ -8,7 +8,8 @@ int main() {
   auto f = murk::ext::mgr.obtain("https://cryptopals.com/static/challenge-data/4.txt");
   auto lines = murk::map(murk::fs::read_all_lines(f), std::function{murk::hex_decode});
 
-  murk::flow_t<murk::data, double> score = murk::crypto::xor_single::score > murk::crypto::dist_conv(murk::crypto::twist_char_dist);
+  murk::flow_t<murk::data, double> score =
+    std::bind(murk::crypto::xor_single::score, flow_input, murk::crypto::dist_conv(murk::crypto::twist_char_dist));
 
   auto res = murk::maximum(lines, score).first;
 
