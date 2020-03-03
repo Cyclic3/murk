@@ -56,12 +56,12 @@ namespace murk {
       if constexpr (sizeof...(args) == 0) {
         std::string s;
         if (std::getline(std::cin, s))
-          return flask(s);
+          return jinja2(s);
         else
           return std::nullopt;
       }
       else {
-        return flask(args...);
+        return jinja2(args...);
       }
     }), {"web", "flask"});
     MURK_MOD_REGISTER(mod::adapt_default_func_print([](auto... args) -> std::optional<std::string> {

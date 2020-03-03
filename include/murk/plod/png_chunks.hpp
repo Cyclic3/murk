@@ -8,7 +8,7 @@ namespace murk::plod {
   class png_chunks {
   public:
     struct chunk {
-      std::array<char, 4> type;
+      std::array<char, 4> type = { 'm', 'u', 'r', 'k' };
       data dat;
 
       template<typename Iter>
@@ -44,13 +44,13 @@ namespace murk::plod {
     };
 
     struct ihdr {
-      uint32_t width;
-      uint32_t height;
-      uint8_t depth;
-      colour_type colour;
-      comp_method comp;
-      filter_method filter;
-      interlace_method interlace;
+      uint32_t width = 0;
+      uint32_t height = 0;
+      uint8_t depth = 1;
+      colour_type colour = colour_type::Greyscale;
+      comp_method comp = comp_method::Deflate;
+      filter_method filter = filter_method::Adaptive;
+      interlace_method interlace = interlace_method::None;
       operator chunk() const;
     };
     struct iend {

